@@ -1,0 +1,76 @@
+---
+layout: chart
+title: Bitcoin charts
+---
+<h1>{{ page.title }}</h1>
+
+<canvas id="myChart" width="1400" height="500" style="margin: auto;"></canvas>
+<div>
+    <button id="prevButton">Previous Month</button>
+    <button id="nextButton">Next Month</button>
+</div>
+
+<script>
+    const chartData = {{ site.data.daily_amounts | jsonify }};
+    const dataArray = Object.entries(chartData).map(([time, tx_count]) => ({ time, tx_count }));
+
+    // Function to get year and month from date string
+    function getYearMonth(dateString) {
+        return dateString.substring(0, 7); // "YYYY-MM"
+    }
+
+    // Group data by month
+    const monthlyData = {};
+    dataArray.forEach(item => {
+        const yearMonth = getYearMonth(item.time);
+        if (!monthlyData[yearMonth]) {
+            monthlyData[yearMonth] = [];
+        }
+        monthlyData[yearMonth].push(item);
+    });
+
+    // Get sorted month keys
+    const monthKeys = Object.keys(monthlyData).sort();
+    let currentMonthIndex = monthKeys.length - 1; // Start with the last month
+
+    const ctx = document.getElementById('myChart').getContext('2d');
+    const myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: '# BTC amount',
+                data: [],
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    function updateChart() {
+        const currentMonth = monthKeys[currentMonthIndex];
+        const monthData = monthlyData[currentMonth];
+        myChart.data.labels = monthData.map(item => item.time);
+        myChart.data.datasets[0].data = monthData.map(item => item.tx_count);
+        myChart.update();
+    }
+
+    updateChart(); // Initial chart display
+
+    document.getElementById('prevButton').addEventListener('click', () => {
+        currentMonthIndex = Math.max(0, currentMonthIndex - 1);
+        updateChart();
+    });
+
+    document.getElementById('nextButton').addEventListener('click', () => {
+        currentMonthIndex = Math.min(monthKeys.length - 1, currentMonthIndex + 1);
+        updateChart();
+    });
+</script>
