@@ -2,9 +2,12 @@
 layout: chart
 title: Bitcoin charts
 ---
-<h1>{{ page.title }}</h1>
+<!-- https://coolors.co/palette/0d1b2a-1b263b-415a77-778da9-e0e1dd -->
+ 
+<div class="p-5 bg-dark text-white text-center">{{ page.title }}</div>
 
-<canvas id="myChart" width="1400" height="500" style="margin: auto;"></canvas>
+<canvas id="BTCAmountChart" width="1400" height="500" style="margin: auto;"></canvas>
+
 <div>
     <button id="prevButton">Previous Month</button>
     <button id="nextButton">Next Month</button>
@@ -33,13 +36,13 @@ title: Bitcoin charts
     const monthKeys = Object.keys(monthlyData).sort();
     let currentMonthIndex = monthKeys.length - 1; // Start with the last month
 
-    const ctx = document.getElementById('myChart').getContext('2d');
-    const myChart = new Chart(ctx, {
+    const ctx = document.getElementById('BTCAmountChart').getContext('2d');
+    const BTCAmountChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: [],
             datasets: [{
-                label: '# BTC amount',
+                label: '# Daily BTC amount',
                 data: [],
                 borderColor: 'rgba(54, 162, 235, 1)',
                 borderWidth: 1
@@ -57,9 +60,9 @@ title: Bitcoin charts
     function updateChart() {
         const currentMonth = monthKeys[currentMonthIndex];
         const monthData = monthlyData[currentMonth];
-        myChart.data.labels = monthData.map(item => item.time);
-        myChart.data.datasets[0].data = monthData.map(item => item.tx_count);
-        myChart.update();
+        BTCAmountChart.data.labels = monthData.map(item => item.time);
+        BTCAmountChart.data.datasets[0].data = monthData.map(item => item.tx_count);
+        BTCAmountChart.update();
     }
 
     updateChart(); // Initial chart display
