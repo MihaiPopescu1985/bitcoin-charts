@@ -16,8 +16,15 @@
 </head>
 
 <body class="vh-100">
+    <div class="row ms-0 ps-1 bg-dark text-light d-block d-md-none">
+      <ul class="nav col-2">
+        <li class="nav-item text-light">
+          <h3>Crypto charts</h3>
+        </li>
+      </ul>
+    </div>
     <div class="row ps-2">
-      <div class="col-2 vh-100 bg-dark">
+      <div class="d-none d-md-block col-sm-3 col-md-2 vh-100 bg-dark">
         <ul class="nav flex-column">
           <li class="nav-item text-light">
             <h1>Crypto charts</h1>
@@ -25,7 +32,7 @@
           <li class="nav-item text-light">Take informed decisions</li>
         </ul>
       </div>
-      <div class="col-10">
+      <div class="col-sm-9 col-md-10 vh-100">
         {{ content }}
       </div>
     </div>
