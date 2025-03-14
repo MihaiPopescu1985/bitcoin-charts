@@ -4,12 +4,16 @@ title: Bitcoin charts
 ---
 <!-- https://coolors.co/palette/0d1b2a-1b263b-415a77-778da9-e0e1dd -->
 
-<canvas id="BTCAmountChart" width="1400" height="500" style="margin: auto;"></canvas>
-
-<div>
-    <button id="prevButton">Previous Month</button>
-    <button id="nextButton">Next Month</button>
-</div>
+<div class="card" style="max-width:700px; max-height:550px">
+    <div class="card-header">Daily BTC amount transactioned</div>
+    <div class="card-body">
+        <canvas id="BTCAmountChart"></canvas>
+    </div>
+    <div class="card-footer">
+        <button id="prevButton">Previous Month</button>
+        <button id="nextButton">Next Month</button>
+    </div>
+  </div>
 
 <script>
     const chartData = {{ site.data.daily_amounts | jsonify }};
