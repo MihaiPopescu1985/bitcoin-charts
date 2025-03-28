@@ -4,78 +4,26 @@ title: Bitcoin charts
 ---
 <!-- https://coolors.co/palette/0d1b2a-1b263b-415a77-778da9-e0e1dd -->
 
-<div class="card" style="max-width:700px; max-height:550px">
-    <div class="card-header">Daily BTC amount transactioned</div>
-    <div class="card-body">
-        <canvas id="BTCAmountChart"></canvas>
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10"> <div class="card">
+                <div class="card-header">Daily BTC amount transactioned</div>
+                <div class="card-body">
+                    <canvas id="BTCAmountChart"></canvas>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <button id="prevButton" class="btn btn-secondary">Previous Month</button>
+                    <button id="nextButton" class="btn btn-secondary">Next Month</button>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="card-footer">
-        <button id="prevButton">Previous Month</button>
-        <button id="nextButton">Next Month</button>
-    </div>
-  </div>
+</div>
 
 <script>
-    const chartData = {{ site.data.daily_amounts | jsonify }};
-    const dataArray = Object.entries(chartData).map(([time, tx_count]) => ({ time, tx_count }));
-
-    // Function to get year and month from date string
-    function getYearMonth(dateString) {
-        return dateString.substring(0, 7); // "YYYY-MM"
-    }
-
-    // Group data by month
-    const monthlyData = {};
-    dataArray.forEach(item => {
-        const yearMonth = getYearMonth(item.time);
-        if (!monthlyData[yearMonth]) {
-            monthlyData[yearMonth] = [];
-        }
-        monthlyData[yearMonth].push(item);
-    });
-
-    // Get sorted month keys
-    const monthKeys = Object.keys(monthlyData).sort();
-    let currentMonthIndex = monthKeys.length - 1; // Start with the last month
-
-    const ctx = document.getElementById('BTCAmountChart').getContext('2d');
-    const BTCAmountChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: '# Daily BTC amount',
-                data: [],
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-
-    function updateChart() {
-        const currentMonth = monthKeys[currentMonthIndex];
-        const monthData = monthlyData[currentMonth];
-        BTCAmountChart.data.labels = monthData.map(item => item.time);
-        BTCAmountChart.data.datasets[0].data = monthData.map(item => item.tx_count);
-        BTCAmountChart.update();
-    }
-
-    updateChart(); // Initial chart display
-
-    document.getElementById('prevButton').addEventListener('click', () => {
-        currentMonthIndex = Math.max(0, currentMonthIndex - 1);
-        updateChart();
-    });
-
-    document.getElementById('nextButton').addEventListener('click', () => {
-        currentMonthIndex = Math.min(monthKeys.length - 1, currentMonthIndex + 1);
-        updateChart();
-    });
+    // Global available data
+    window.btcDailyAmountData = {{ site.data.daily_amounts | jsonify }};
+    window.btcDailyPriceData = {{ site.data.daily_close_price | jsonify }};
 </script>
+
+<script src="{{ '/assets/js/btc_amount_chart.js' | relative_url }}"></script>

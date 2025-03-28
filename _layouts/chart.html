@@ -13,35 +13,56 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <title>{{ page.title }}</title>
+
+  <style>
+    #BTCAmountChart {
+      width: 100% !important;
+      /* Ensure canvas takes full width of its container */
+      max-height: 400px;
+      /* Adjust this value to control the height */
+      margin-bottom: 20px;
+      /* Add some margin below the chart */
+    }
+
+    .card {
+      margin-top: 20px;
+      /* Add some margin above the card */
+    }
+
+    .card-header {
+      font-weight: bold;
+    }
+  </style>
+
 </head>
 
 <body class="vh-100">
-    <div class="row ms-0 ps-1 bg-dark text-light d-block d-md-none">
-      <h3 class="text-center">Crypto charts</h3>
-      <ul class="nav">
+  <div class="row ms-0 ps-1 bg-dark text-light d-block d-md-none">
+    <h3 class="text-center">Crypto charts</h3>
+    <ul class="nav">
+      <li class="nav-item text-light">
+        <a class="nav-link" href="index">BTC amount</a>
+      </li>
+    </ul>
+  </div>
+  <div class="row ps-2">
+    <div class="d-none d-md-block col-sm-3 col-md-2 vh-100 bg-dark">
+      <ul class="nav flex-column">
+        <li class="nav-item text-light">
+          <h1>Crypto charts</h1>
+        </li>
+        <li class="nav-item text-light">Take informed decisions</li>
         <li class="nav-item text-light">
           <a class="nav-link" href="index">BTC amount</a>
         </li>
       </ul>
     </div>
-    <div class="row ps-2">
-      <div class="d-none d-md-block col-sm-3 col-md-2 vh-100 bg-dark">
-        <ul class="nav flex-column">
-          <li class="nav-item text-light">
-            <h1>Crypto charts</h1>
-          </li>
-          <li class="nav-item text-light">Take informed decisions</li>
-          <li class="nav-item text-light">
-            <a class="nav-link" href="index">BTC amount</a>
-          </li>
-        </ul>
-      </div>
-      <div class="col-sm-9 col-md-10 vh-100">
-        <div class="container">
-          {{ content }}
-        </div>
+    <div class="col-sm-9 col-md-10 vh-100">
+      <div class="container">
+        {{ content }}
       </div>
     </div>
+  </div>
 </body>
 
 </html>
