@@ -85,7 +85,7 @@ const BTCAmountChart = new Chart(ctx, {
                 }
             },
             'y-price': {
-                type: 'linear',
+                type: 'logarithmic',
                 display: true,
                 position: 'right',
                 beginAtZero: false,
