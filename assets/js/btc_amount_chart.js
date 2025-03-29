@@ -74,11 +74,10 @@ const BTCAmountChart = new Chart(ctx, {
     },
     options: {
         scales: {
-            y: {
+            'y-amount': {
                 type: 'linear',
                 display: true,
                 position: 'left',
-                id: 'y-amount',
                 beginAtZero: true,
                 title: {
                     display: true,
@@ -89,14 +88,13 @@ const BTCAmountChart = new Chart(ctx, {
                 type: 'linear',
                 display: true,
                 position: 'right',
-                id: 'y-price',
-                beginAtZero: true,
+                beginAtZero: false,
                 title: {
                     display: true,
                     text: 'BTC Close Price'
                 },
                 grid: {
-                    drawOnChartArea: false, // only want the grid lines for one axis to show up
+                    drawOnChartArea: false,
                 },
             },
         }
