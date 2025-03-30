@@ -27,3 +27,45 @@ title: Bitcoin charts
 </script>
 
 <script src="{{ '/assets/js/btc_amount_chart.js' | relative_url }}"></script>
+
+<div>
+    <br>
+    <h3>About</h3>
+    <p>The visualization presents a dual-axis time series analysis of Bitcoin, overlaying daily transaction blockchain volume with its corresponding closing price.</p>
+    <p>The transaction volume is represented as discrete bars, providing a clear indication of daily on-chain activity.</p>
+    <p>The price is depicted as a continuous line, allowing for the observation of price trends over time.</p>
+    <p>Utilizing a logarithmic scale for the price axis, facilitates the visualization of percentage changes in price, particularly useful given Bitcoin's volatile price history and significant growth.</p>
+    <br>
+    <h3>Potential Usefulness</h3>
+    <p>This chart, while seemingly straightforward, can be quite useful for several reasons:</p>
+    <ul>
+        <li><strong>Understanding Market Activity: </strong>The blockchain transaction volume provides insights into the level of activity on the Bitcoin network. High transaction volume correlates with periods of increased buying or selling pressure, or general network utilization.</li>
+        <li><strong>Correlation Analysis (Visual): </strong>It allows for a visual inspection of the relationship between blockchain transaction volume and price movements. We can observe if price spikes or dips tend to coincide with high or low blockchain volume.</li>
+        <li><strong>Identifying Trends and Patterns: </strong>Over time, patterns might emerge. For example, are there consistent increases in volume leading up to price surges? Or do price drops often follow periods of low volume?</li>
+        <li><strong>Contextualizing Price Action: </strong>The transaction volume can provide context to price changes. A significant price increase accompanied by low volume might suggest a less robust rally compared to one with high volume.</li>
+        <li><strong>Basic Exploratory Data Analysis (EDA): </strong>This visualization serves as a fundamental step in exploring the relationship between these two key metrics for Bitcoin.</li>
+    </ul> 
+    <br>
+    <h3>What it is Representing:</h3>
+    <p>The chart is fundamentally representing the daily interaction between the demand/supply dynamics (reflected in price) and the network utilization (reflected in transaction volume) of Bitcoin over a specific period.</p>
+    <p>Price Line: This represents the market consensus on the value of Bitcoin at the end of each trading day. It's a key indicator of investor sentiment and market forces.</p>
+    <p>Volume Bars: This represents the total number of transactions that occurred on the Bitcoin blockchain each day. It's a measure of the network's activity and utility for transferring value.</p>
+    <p>By combining these two elements, the chart offers a glimpse into how these fundamental aspects of Bitcoin interact on a daily basis.</p>
+    <br>
+    <h3>Predictive Capabilities:</h3>
+    <p>On its own, this chart is unlikely to be a reliable predictor of future price movements.</p>
+    <p>Here's why:</p>
+    <ul>
+        <li><strong>Correlation vs. Causation: </strong>Even if we observe correlations between volume and price, it doesn't necessarily mean one causes the other. Both could be influenced by other underlying factors (e.g., macroeconomic events, regulatory news, technological developments).</li>
+        <li><strong>Oversimplification: </strong>Bitcoin's price is influenced by a multitude of factors beyond just transaction volume. Market sentiment, adoption rates, regulatory landscape, macroeconomic conditions, and technological advancements all play significant roles.</li>
+        <li><strong>Lagging Indicators: </strong>Transaction volume can sometimes be a lagging indicator, meaning it confirms a price movement that has already occurred rather than predicting it.</li>
+        <li><strong>Noise in the Data: </strong>Daily fluctuations can be noisy and might not represent significant long-term trends.</li>
+        <li><strong>Feature Engineering: </strong>The insights gained from observing this chart can inform the creation of more complex features for machine learning models. For example, you might calculate moving averages of volume, ratios of volume to price change, or identify specific volume patterns around price events.</li>
+        <li><strong>Hypothesis Generation: </strong>Visualizations like this can help generate hypotheses about potential relationships that can then be tested using statistical methods and more advanced modeling techniques.</li>
+        <li><strong>Model Evaluation: </strong>While not predictive on its own, the chart can be used to visually evaluate the performance of a predictive model. You can overlay the model's predictions on the chart to see how well they align with actual price movements and volume.</li>
+    </ul>
+
+    <p><strong>However, this chart can be a useful input or feature in a more sophisticated predictive model.</strong></p>
+    <p>In conclusion, while your price and transaction amount chart is valuable for understanding historical trends, exploring relationships, and providing context to Bitcoin's behavior, it's crucial to avoid using it as a standalone predictor of future price movements.</p>
+    <p>Its true power lies in its ability to inform further analysis and potentially contribute to more sophisticated predictive models when combined with other relevant data and techniques.</p>
+</div>
