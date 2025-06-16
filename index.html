@@ -1,22 +1,23 @@
 ---
-layout: chart
+layout: dashboard
 title: Bitcoin charts
 ---
-<!-- https://coolors.co/palette/0d1b2a-1b263b-415a77-778da9-e0e1dd -->
-
-<div class="container-fluid">
-    <div class="row justify-content-center">
-        <div class="col-lg-10"> <div class="card">
-                <div class="card-header">Daily BTC amount transactioned</div>
-                <div class="card-body">
-                    <canvas id="BTCAmountChart"></canvas>
-                </div>
-                <div class="card-footer d-flex justify-content-between">
-                    <button id="prevButton" class="btn btn-secondary">Previous Month</button>
-                    <button id="nextButton" class="btn btn-secondary">Next Month</button>
-                </div>
-            </div>
+<div class="dashboard-container">
+    <div class="w3-card-4 w3-hover-shadow" data-chart-id="BTCAmountChart">
+        <div class="w3-container w3-center w3-padding-16">
+            <h3>Daily BTC amount transactioned and Close Price</h3>
         </div>
+        <div class="chart-container">
+            <canvas id="BTCAmountChart"></canvas>
+        </div>
+        </div>
+</div>
+
+<div id="cardModal" class="w3-modal">
+    <div class="w3-modal-content w3-animate-zoom">
+        <span class="close-button" onclick="closeModal()">&times;</span>
+        <div id="modalContent">
+            </div>
     </div>
 </div>
 
@@ -24,48 +25,252 @@ title: Bitcoin charts
     // Global available data
     window.btcDailyAmountData = {{ site.data.daily_amounts | jsonify }};
     window.btcDailyPriceData = {{ site.data.daily_close_price | jsonify }};
+
+    // Access the data from the global variables
+    const amountData = window.btcDailyAmountData;
+    const priceData = window.btcDailyPriceData;
+
+    // Function to transform data into the expected format
+    function transformData(data) {
+        return Object.entries(data).map(([time, value]) => ({ time, value }));
+    }
+
+    // Transform both datasets
+    const amountArray = transformData(amountData);
+    const priceArray = transformData(priceData);
+
+    // Get year and month from date string
+    function getYearMonth(dateString) {
+        return dateString.substring(0, 7); // "YYYY-MM"
+    }
+
+    function getDay(dateString) {
+        return dateString.substring(8); // "DD"
+    }
+
+    // Group data by month
+    const monthlyAmountData = {};
+    amountArray.forEach(item => {
+        const yearMonth = getYearMonth(item.time);
+        const day = getDay(item.time);
+        if (!monthlyAmountData[yearMonth]) {
+            monthlyAmountData[yearMonth] = [];
+        }
+        monthlyAmountData[yearMonth].push({
+            time: day,
+            tx_count: item.value
+        });
+    });
+
+    const monthlyPriceData = {};
+    priceArray.forEach(item => {
+        const yearMonth = getYearMonth(item.time);
+        const day = getDay(item.time);
+        if (!monthlyPriceData[yearMonth]) {
+            monthlyPriceData[yearMonth] = [];
+        }
+        monthlyPriceData[yearMonth].push({
+            time: day,
+            close: item.value
+        });
+    });
+
+    // Get sorted month keys (assuming both datasets have the same months)
+    const monthKeys = Object.keys(monthlyAmountData).sort();
+    let currentMonthIndex = monthKeys.length - 1; // Start with the last month
+
+    // Store the initial graphics configurations
+    const chartConfigs = {};
+    // Store the current graphics instances (cards and modals)
+    const activeCharts = {};
+
+    function initializeCharts() {
+        // BTC Amount and Price Chart Configuration
+        chartConfigs.BTCAmountChart = {
+            type: 'bar',
+            data: {
+                labels: [], // These will be populated by updateChart()
+                datasets: [{
+                    label: '', // Populated by updateChart()
+                    data: [], // Populated by updateChart()
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)', // Added background color for bars
+                    borderWidth: 1,
+                    yAxisID: 'y-amount'
+                }, {
+                    label: '', // Populated by updateChart()
+                    data: [], // Populated by updateChart()
+                    type: 'line',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)', // Added background color for line area
+                    borderWidth: 2,
+                    fill: false, // Changed to true if you want the area filled
+                    yAxisID: 'y-price'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // Important for scaling
+                plugins: {
+                    title: { display: false } // Title already in card
+                },
+                scales: {
+                    'y-amount': {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'BTC Amount'
+                        }
+                    },
+                    'y-price': {
+                        type: 'logarithmic', // Use logarithmic scale for price
+                        display: true,
+                        position: 'right',
+                        beginAtZero: false, // Prices don't start at zero
+                        title: {
+                            display: true,
+                            text: 'BTC Close Price'
+                        },
+                        grid: {
+                            drawOnChartArea: false, // Only draw grid lines for the primary Y axis
+                        },
+                    },
+                }
+            }
+        };
+
+        // Initialize the BTCAmountChart in its card
+        const ctx = document.getElementById('BTCAmountChart')?.getContext('2d');
+        if (ctx) {
+            activeCharts.BTCAmountChart = new Chart(ctx, chartConfigs.BTCAmountChart);
+            updateChart(); // Call updateChart to populate initial data
+        }
+    }
+
+    // Function to update the chart data based on the current month
+    function updateChart() {
+        const currentMonth = monthKeys[currentMonthIndex];
+        const monthAmountData = monthlyAmountData[currentMonth];
+        const monthPriceData = monthlyPriceData[currentMonth];
+
+        const labels = monthAmountData.map(item => item.time);
+
+        // Determine which chart instance to update: the one in the card or the one in the modal
+        const chartToUpdate = activeCharts.modalChartInstance || activeCharts.BTCAmountChart;
+
+        if (chartToUpdate) {
+            chartToUpdate.data.labels = labels;
+            chartToUpdate.data.datasets[0].label = "BTC Amount - " + currentMonth;
+            chartToUpdate.data.datasets[0].data = monthAmountData.map(item => item.tx_count);
+
+            chartToUpdate.data.datasets[1].label = "BTC Close Price - " + currentMonth;
+            chartToUpdate.data.datasets[1].data = monthPriceData.map(item => item.close);
+
+            chartToUpdate.update();
+        }
+
+        // Enable/disable buttons based on current month index, only if they exist (i.e., in modal)
+        const prevButton = document.getElementById('modalPrevButton');
+        const nextButton = document.getElementById('modalNextButton');
+
+        if (prevButton && nextButton) {
+            prevButton.disabled = (currentMonthIndex === 0);
+            nextButton.disabled = (currentMonthIndex === monthKeys.length - 1);
+        }
+    }
+
+    // Wait for DOM
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeCharts();
+    });
+
+    const cardModal = document.getElementById('cardModal');
+    const modalContentDiv = document.getElementById('modalContent');
+    let currentExpandedChartId = null;
+
+    // Open the modal and extend card
+    document.querySelectorAll('.w3-card-4').forEach(card => {
+        card.addEventListener('click', function() {
+            const chartId = this.dataset.chartId;
+            const cardTitle = this.querySelector('h3').textContent;
+
+            if (chartId && chartConfigs[chartId]) {
+                currentExpandedChartId = chartId;
+
+                // Destroy the chart instance in the original card
+                if (activeCharts[chartId]) {
+                    activeCharts[chartId].destroy();
+                    delete activeCharts[chartId];
+                }
+
+                // Inject modal content including buttons
+                modalContentDiv.innerHTML = `
+                    <h3 class="w3-center w3-padding-16">${cardTitle}</h3>
+                    <div class="chart-container" style="height: auto; max-height: 80vh;">
+                        <canvas id="modalChart"></canvas>
+                    </div>
+                    <div class="w3-container w3-center w3-padding-small">
+                        <button id="modalPrevButton" class="w3-button w3-light-grey w3-round-large w3-margin-right">Previous Month</button>
+                        <button id="modalNextButton" class="w3-button w3-light-grey w3-round-large">Next Month</button>
+                    </div>
+                `;
+
+                const modalChartCtx = document.getElementById('modalChart').getContext('2d');
+                // Deep clone the config to ensure independence
+                const configForModal = JSON.parse(JSON.stringify(chartConfigs[chartId]));
+                activeCharts['modalChartInstance'] = new Chart(modalChartCtx, configForModal);
+
+                // Add event listeners for navigation buttons in the modal
+                document.getElementById('modalPrevButton').addEventListener('click', () => {
+                    currentMonthIndex = Math.max(0, currentMonthIndex - 1);
+                    updateChart();
+                });
+
+                document.getElementById('modalNextButton').addEventListener('click', () => {
+                    currentMonthIndex = Math.min(monthKeys.length - 1, currentMonthIndex + 1);
+                    updateChart();
+                });
+
+                // Update the chart in the modal to show the correct month data
+                updateChart(); // This will use activeCharts.modalChartInstance now
+
+                cardModal.style.display = 'block';
+            }
+        });
+    });
+
+    function closeModal() {
+        cardModal.style.display = 'none';
+
+        // Destroy the chart in the modal
+        if (activeCharts['modalChartInstance']) {
+            activeCharts['modalChartInstance'].destroy();
+            delete activeCharts['modalChartInstance'];
+        }
+
+        // Graphic restore in the original card
+        if (currentExpandedChartId) {
+            const originalCanvas = document.getElementById(currentExpandedChartId);
+            if (originalCanvas) {
+                const originalCtx = originalCanvas.getContext('2d');
+
+                originalCtx.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
+                activeCharts[currentExpandedChartId] = new Chart(originalCtx, chartConfigs[currentExpandedChartId]);
+
+                // Update the chart in the original card to show the current month data
+                updateChart(); // This will use activeCharts.BTCAmountChart now
+            }
+        }
+        currentExpandedChartId = null; // Reset ID
+    }
+
+    // Close the modal on click outside of its area
+    window.onclick = function(event) {
+        if (event.target == cardModal) {
+            closeModal();
+        }
+    }
 </script>
-
-<script src="{{ '/assets/js/btc_amount_chart.js' | relative_url }}"></script>
-
-<div>
-    <br>
-    <h3>About</h3>
-    <p>The visualization presents a dual-axis time series analysis of Bitcoin, overlaying daily transaction blockchain volume with its corresponding closing price.</p>
-    <p>The transaction volume is represented as discrete bars, providing a clear indication of daily on-chain activity.</p>
-    <p>The price is depicted as a continuous line, allowing for the observation of price trends over time.</p>
-    <p>Utilizing a logarithmic scale for the price axis, facilitates the visualization of percentage changes in price, particularly useful given Bitcoin's volatile price history and significant growth.</p>
-    <br>
-    <h3>Potential Usefulness</h3>
-    <p>This chart, while seemingly straightforward, can be quite useful for several reasons:</p>
-    <ul>
-        <li><strong>Understanding Market Activity: </strong>The blockchain transaction volume provides insights into the level of activity on the Bitcoin network. High transaction volume correlates with periods of increased buying or selling pressure, or general network utilization.</li>
-        <li><strong>Correlation Analysis (Visual): </strong>It allows for a visual inspection of the relationship between blockchain transaction volume and price movements. We can observe if price spikes or dips tend to coincide with high or low blockchain volume.</li>
-        <li><strong>Identifying Trends and Patterns: </strong>Over time, patterns might emerge. For example, are there consistent increases in volume leading up to price surges? Or do price drops often follow periods of low volume?</li>
-        <li><strong>Contextualizing Price Action: </strong>The transaction volume can provide context to price changes. A significant price increase accompanied by low volume might suggest a less robust rally compared to one with high volume.</li>
-        <li><strong>Basic Exploratory Data Analysis (EDA): </strong>This visualization serves as a fundamental step in exploring the relationship between these two key metrics for Bitcoin.</li>
-    </ul> 
-    <br>
-    <h3>What it is Representing:</h3>
-    <p>The chart is fundamentally representing the daily interaction between the demand/supply dynamics (reflected in price) and the network utilization (reflected in transaction volume) of Bitcoin over a specific period.</p>
-    <p>Price Line: This represents the market consensus on the value of Bitcoin at the end of each trading day. It's a key indicator of investor sentiment and market forces.</p>
-    <p>Volume Bars: This represents the total number of transactions that occurred on the Bitcoin blockchain each day. It's a measure of the network's activity and utility for transferring value.</p>
-    <p>By combining these two elements, the chart offers a glimpse into how these fundamental aspects of Bitcoin interact on a daily basis.</p>
-    <br>
-    <h3>Predictive Capabilities:</h3>
-    <p>On its own, this chart is unlikely to be a reliable predictor of future price movements.</p>
-    <p>Here's why:</p>
-    <ul>
-        <li><strong>Correlation vs. Causation: </strong>Even if we observe correlations between volume and price, it doesn't necessarily mean one causes the other. Both could be influenced by other underlying factors (e.g., macroeconomic events, regulatory news, technological developments).</li>
-        <li><strong>Oversimplification: </strong>Bitcoin's price is influenced by a multitude of factors beyond just transaction volume. Market sentiment, adoption rates, regulatory landscape, macroeconomic conditions, and technological advancements all play significant roles.</li>
-        <li><strong>Lagging Indicators: </strong>Transaction volume can sometimes be a lagging indicator, meaning it confirms a price movement that has already occurred rather than predicting it.</li>
-        <li><strong>Noise in the Data: </strong>Daily fluctuations can be noisy and might not represent significant long-term trends.</li>
-        <li><strong>Feature Engineering: </strong>The insights gained from observing this chart can inform the creation of more complex features for machine learning models. For example, you might calculate moving averages of volume, ratios of volume to price change, or identify specific volume patterns around price events.</li>
-        <li><strong>Hypothesis Generation: </strong>Visualizations like this can help generate hypotheses about potential relationships that can then be tested using statistical methods and more advanced modeling techniques.</li>
-        <li><strong>Model Evaluation: </strong>While not predictive on its own, the chart can be used to visually evaluate the performance of a predictive model. You can overlay the model's predictions on the chart to see how well they align with actual price movements and volume.</li>
-    </ul>
-
-    <p><strong>However, this chart can be a useful input or feature in a more sophisticated predictive model.</strong></p>
-    <p>In conclusion, while your price and transaction amount chart is valuable for understanding historical trends, exploring relationships, and providing context to Bitcoin's behavior, it's crucial to avoid using it as a standalone predictor of future price movements.</p>
-    <p>Its true power lies in its ability to inform further analysis and potentially contribute to more sophisticated predictive models when combined with other relevant data and techniques.</p>
-</div>

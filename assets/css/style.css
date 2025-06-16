@@ -1,0 +1,106 @@
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+.dashboard-container {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+.w3-card-4 {
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden; /* Asigură că conținutul nu depășește colțurile rotunjite */
+}
+.w3-card-4:hover {
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+}
+.chart-container {
+    position: relative;
+    height: 300px; /* Înălțimea implicită a containerului graficului */
+    width: 100%;
+    padding: 15px; /* Spațiu în jurul graficului */
+    box-sizing: border-box; /* Include padding-ul în lățime/înălțime */
+}
+
+/* Stiluri pentru modul extins */
+.w3-modal {
+    display: none; /* Ascuns implicit */
+    position: fixed; /* Rămâne pe loc la scroll */
+    z-index: 999; /* Deasupra tuturor celorlalte elemente */
+    left: 0;
+    top: 0;
+    width: 100%; /* Lățime completă */
+    height: 100%; /* Înălțime completă */
+    overflow: auto; /* Permite scroll dacă este necesar */
+    background-color: rgba(0,0,0,0.8); /* Fundal semi-transparent */
+    padding-top: 50px;
+}
+.w3-modal-content {
+    margin: auto;
+    display: block;
+    width: 90%;
+    max-width: 900px;
+    position: relative;
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+.close-button {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    color: #aaa;
+    font-size: 35px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.close-button:hover,
+.close-button:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+/* Asigură că canvas-ul se redimensionează corect în modal */
+.w3-modal-content canvas {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 80vh; /* Limitează înălțimea în modal */
+}
+/* Add this CSS to your stylesheet */
+
+.w3-modal.show {
+    display: block; /* Display when active */
+}
+.dashboard-container {
+    padding: 20px;
+    display: flex; /* Use flexbox for centering */
+    justify-content: center; /* Center horizontally */
+    align-items: flex-start; /* Align items to the start of the cross axis */
+    flex-wrap: wrap; /* Allow cards to wrap to the next line */
+    gap: 20px; /* Space between cards */
+}
+
+.w3-card-4 {
+    width: clamp(300px, 80vw, 600px); /* Responsive width: min 300px, max 600px, ideally 80% of viewport width */
+    margin: 0 auto; /* Auto margins for horizontal centering if flexbox is not used, but good to keep */
+    /* Existing styles for w3-card-4 */
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Additional styling for the buttons in modal */
+.w3-modal-content .w3-button {
+    /* Add any specific styles for modal buttons if needed */
+    margin-top: 10px; /* Space above buttons */
+}
