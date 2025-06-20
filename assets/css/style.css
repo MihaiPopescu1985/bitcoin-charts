@@ -2,56 +2,83 @@ body, html {
     height: 100%;
     margin: 0;
     font-family: Arial, sans-serif;
+    background-color: #f1f1f1; /* Light grey background for the page */
 }
 .dashboard-container {
     padding: 20px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 20px;
+    align-items: flex-start; /* Align items to the start of the flex container */
 }
 .w3-card-4 {
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    position: relative;
+    transition: box-shadow 0.3s ease, transform 0.3s ease, width 0.3s ease, height 0.3s ease, margin 0.3s ease, order 0.3s ease; /* Added margin and order to transition */
+    position: relative; /* Keep relative positioning for normal flow */
     background-color: white;
     border-radius: 8px;
-    overflow: hidden; /* Asigură că conținutul nu depășește colțurile rotunjite */
+    overflow: hidden;
+    width: clamp(300px, 90vw, 600px); /* Normal size for cards */
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.1);
+    z-index: 1; /* Default z-index */
+    min-height: 450px; /* Base height for card (title + chart + padding) */
+    cursor: pointer; /* Indicate clickable */
+    order: initial; /* Default order in flex container */
 }
 .w3-card-4:hover {
     box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
 }
-.chart-container {
-    position: relative;
-    height: 300px; /* Înălțimea implicită a containerului graficului */
-    width: 100%;
-    padding: 15px; /* Spațiu în jurul graficului */
-    box-sizing: border-box; /* Include padding-ul în lățime/înălțime */
+
+.w3-card-4.expanded {
+    width: calc(100vw - 40px); /* 20px margin on each side */
+    max-width: 1000px; /* A reasonable max-width for large screens */
+    height: auto; /* Let content determine height */
+    max-height: calc(100vh - 140px); /* Adjusted for header (approx 70px) + top/bottom margin */
+    margin: 20px auto; /* Top/bottom margin, and auto left/right for centering */
+    z-index: 1000; /* Bring to front */
+    border-radius: 8px; /* Keep some border-radius */
+    box-shadow: 0 0 20px rgba(0,0,0,0.5); /* Stronger shadow for expanded state */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Align content to start */
+    align-items: center;
+    cursor: default; /* Change cursor when expanded */
+    order: -1; /* Make it appear first in the flex container */
+}
+.w3-card-4.expanded .w3-container.w3-center.w3-padding-16 {
+    flex-shrink: 0;
+    padding-bottom: 8px !important;
+}
+.w3-card-4.expanded .chart-controls {
+    flex-shrink: 0;
+    padding-top: 8px !important;
 }
 
-/* Stiluri pentru modul extins */
-.w3-modal {
-    display: none; /* Ascuns implicit */
-    position: fixed; /* Rămâne pe loc la scroll */
-    z-index: 999; /* Deasupra tuturor celorlalte elemente */
-    left: 0;
-    top: 0;
-    width: 100%; /* Lățime completă */
-    height: 100%; /* Înălțime completă */
-    overflow: auto; /* Permite scroll dacă este necesar */
-    background-color: rgba(0,0,0,0.8); /* Fundal semi-transparent */
-    padding-top: 50px;
-}
-.w3-modal-content {
-    margin: auto;
-    display: block;
-    width: 90%;
-    max-width: 900px;
+.chart-container {
     position: relative;
-    background-color: white;
-    border-radius: 8px;
-    padding: 20px;
+    height: 300px; /* Default height for charts in cards */
+    width: 100%;
+    padding: 15px;
     box-sizing: border-box;
+    flex-grow: 1; /* Allows chart container to fill available vertical space */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
+
+.w3-card-4.expanded .chart-container {
+    height: auto;
+    max-height: calc(100vh - 200px); /* Further refine height for chart itself, considering title/buttons */
+    padding: 20px;
+    background-color: white;
+}
+
+.w3-card-4.expanded .chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Styles for the close button within the expanded card */
 .close-button {
     position: absolute;
     top: 15px;
@@ -60,47 +87,45 @@ body, html {
     font-size: 35px;
     font-weight: bold;
     cursor: pointer;
+    z-index: 1001;
+    background-color: white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: none; /* Hidden by default */
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: color 0.3s ease;
 }
 .close-button:hover,
 .close-button:focus {
     color: black;
     text-decoration: none;
-    cursor: pointer;
-}
-/* Asigură că canvas-ul se redimensionează corect în modal */
-.w3-modal-content canvas {
-    width: 100% !important;
-    height: auto !important;
-    max-height: 80vh; /* Limitează înălțimea în modal */
-}
-/* Add this CSS to your stylesheet */
-
-.w3-modal.show {
-    display: block; /* Display when active */
-}
-.dashboard-container {
-    padding: 20px;
-    display: flex; /* Use flexbox for centering */
-    justify-content: center; /* Center horizontally */
-    align-items: flex-start; /* Align items to the start of the cross axis */
-    flex-wrap: wrap; /* Allow cards to wrap to the next line */
-    gap: 20px; /* Space between cards */
 }
 
-.w3-card-4 {
-    width: clamp(300px, 80vw, 600px); /* Responsive width: min 300px, max 600px, ideally 80% of viewport width */
-    margin: 0 auto; /* Auto margins for horizontal centering if flexbox is not used, but good to keep */
-    /* Existing styles for w3-card-4 */
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    position: relative;
+/* Chart controls */
+.chart-controls {
+    display: none; /* Hidden by default */
+    justify-content: center;
+    padding: 10px;
+    width: 100%;
     background-color: white;
-    border-radius: 8px;
-    overflow: hidden;
+    flex-shrink: 0;
+}
+/* Show controls when the card is expanded */
+.w3-card-4.expanded .chart-controls {
+    display: flex;
 }
 
-/* Additional styling for the buttons in modal */
-.w3-modal-content .w3-button {
-    /* Add any specific styles for modal buttons if needed */
-    margin-top: 10px; /* Space above buttons */
+.w3-button {
+    border-radius: 4px;
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+}
+.w3-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }

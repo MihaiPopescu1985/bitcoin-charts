@@ -3,274 +3,353 @@ layout: dashboard
 title: Bitcoin charts
 ---
 <div class="dashboard-container">
-    <div class="w3-card-4 w3-hover-shadow" data-chart-id="BTCAmountChart">
+
+    <!-- Card 1: Daily BTC Amount Transactioned and Close Price -->
+    <div class="w3-card-4" data-chart-id="BTCAmountChart" id="BTCAmountCard">
+        <span class="close-button">&times;</span>
         <div class="w3-container w3-center w3-padding-16">
-            <h3>Daily BTC amount transactioned and Close Price</h3>
+            <h3>Daily BTC Amount Transactioned & Close Price</h3>
         </div>
         <div class="chart-container">
             <canvas id="BTCAmountChart"></canvas>
         </div>
+        <div class="chart-controls">
+            <button id="prevMonthButton" class="w3-button w3-light-grey w3-round-large w3-margin-right">Previous
+                Month</button>
+            <button id="nextMonthButton" class="w3-button w3-light-grey w3-round-large">Next Month</button>
         </div>
-</div>
-
-<div id="cardModal" class="w3-modal">
-    <div class="w3-modal-content w3-animate-zoom">
-        <span class="close-button" onclick="closeModal()">&times;</span>
-        <div id="modalContent">
-            </div>
     </div>
-</div>
 
-<script>
-    // Global available data
-    window.btcDailyAmountData = {{ site.data.daily_amounts | jsonify }};
-    window.btcDailyPriceData = {{ site.data.daily_close_price | jsonify }};
+    <!-- Card 2: Daily BTC Transaction Size Distribution -->
+    <div class="w3-card-4" data-chart-id="BTCSizeDistributionChart" id="BTCSizeDistributionCard">
+        <span class="close-button">&times;</span>
+        <div class="w3-container w3-center w3-padding-16">
+            <h3>Daily BTC Transaction Size Distribution</h3>
+        </div>
+        <div class="chart-container">
+            <canvas id="BTCSizeDistributionChart"></canvas>
+        </div>
+        <div class="chart-controls">
+            <button id="prevDayButton" class="w3-button w3-light-grey w3-round-large w3-margin-right">Previous
+                Day</button>
+            <button id="nextDayButton" class="w3-button w3-light-grey w3-round-large">Next Day</button>
+        </div>
+    </div>
 
-    // Access the data from the global variables
-    const amountData = window.btcDailyAmountData;
-    const priceData = window.btcDailyPriceData;
+    <script>
+        // Data sources
+        window.btcDailyAmountData = {{ site.data.daily_amounts | jsonify }};
+        window.btcDailyPriceData = {{ site.data.daily_close_price | jsonify }};
+        window.btcDailyTransactionSizeData = {{ site.data.daily_transaction_size | jsonify }};
 
-    // Function to transform data into the expected format
-    function transformData(data) {
-        return Object.entries(data).map(([time, value]) => ({ time, value }));
-    }
+        // --- Chart Data Processing ---
+        const amountData = window.btcDailyAmountData;
+        const priceData = window.btcDailyPriceData;
+        const transactionSizeData = window.btcDailyTransactionSizeData;
 
-    // Transform both datasets
-    const amountArray = transformData(amountData);
-    const priceArray = transformData(priceData);
-
-    // Get year and month from date string
-    function getYearMonth(dateString) {
-        return dateString.substring(0, 7); // "YYYY-MM"
-    }
-
-    function getDay(dateString) {
-        return dateString.substring(8); // "DD"
-    }
-
-    // Group data by month
-    const monthlyAmountData = {};
-    amountArray.forEach(item => {
-        const yearMonth = getYearMonth(item.time);
-        const day = getDay(item.time);
-        if (!monthlyAmountData[yearMonth]) {
-            monthlyAmountData[yearMonth] = [];
+        // Helper functions for existing BTC Amount/Price Chart
+        function transformData(data) {
+            return Object.entries(data).map(([time, value]) => ({ time, value }));
         }
-        monthlyAmountData[yearMonth].push({
-            time: day,
-            tx_count: item.value
+        const amountArray = transformData(amountData);
+        const priceArray = transformData(priceData);
+
+        function getYearMonth(dateString) { return dateString.substring(0, 7); } // "YYYY-MM"
+        function getDay(dateString) { return dateString.substring(8); } // "DD"
+
+        // Group data by month
+        const monthlyAmountData = {};
+        amountArray.forEach(item => {
+            const yearMonth = getYearMonth(item.time);
+            const day = getDay(item.time);
+            if (!monthlyAmountData[yearMonth]) { monthlyAmountData[yearMonth] = []; }
+            monthlyAmountData[yearMonth].push({ time: day, tx_count: item.value });
         });
-    });
 
-    const monthlyPriceData = {};
-    priceArray.forEach(item => {
-        const yearMonth = getYearMonth(item.time);
-        const day = getDay(item.time);
-        if (!monthlyPriceData[yearMonth]) {
-            monthlyPriceData[yearMonth] = [];
-        }
-        monthlyPriceData[yearMonth].push({
-            time: day,
-            close: item.value
+        const monthlyPriceData = {};
+        priceArray.forEach(item => {
+            const yearMonth = getYearMonth(item.time);
+            const day = getDay(item.time);
+            if (!monthlyPriceData[yearMonth]) { monthlyPriceData[yearMonth] = []; }
+            monthlyPriceData[yearMonth].push({ time: day, close: item.value });
         });
-    });
 
-    // Get sorted month keys (assuming both datasets have the same months)
-    const monthKeys = Object.keys(monthlyAmountData).sort();
-    let currentMonthIndex = monthKeys.length - 1; // Start with the last month
+        // Sort months in descending order
+        const monthKeys = Object.keys(monthlyAmountData).sort();
+        let currentMonthIndex = monthKeys.length - 1; // Start with the last month
 
-    // Store the initial graphics configurations
-    const chartConfigs = {};
-    // Store the current graphics instances (cards and modals)
-    const activeCharts = {};
+        // Daily BTC Transaction Size Distribution Chart
+        const dailyTransactionSizeKeys = Object.keys(transactionSizeData).sort();
+        let currentDayIndex = dailyTransactionSizeKeys.length - 1; // Start with the last day
 
-    function initializeCharts() {
-        // BTC Amount and Price Chart Configuration
-        chartConfigs.BTCAmountChart = {
-            type: 'bar',
-            data: {
-                labels: [], // These will be populated by updateChart()
-                datasets: [{
-                    label: '', // Populated by updateChart()
-                    data: [], // Populated by updateChart()
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)', // Added background color for bars
-                    borderWidth: 1,
-                    yAxisID: 'y-amount'
-                }, {
-                    label: '', // Populated by updateChart()
-                    data: [], // Populated by updateChart()
-                    type: 'line',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)', // Added background color for line area
-                    borderWidth: 2,
-                    fill: false, // Changed to true if you want the area filled
-                    yAxisID: 'y-price'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false, // Important for scaling
-                plugins: {
-                    title: { display: false } // Title already in card
+        // --- Chart Management ---
+        const chartConfigs = {};
+        const activeChartInstances = {}; // Stores live Chart.js objects
+
+        let currentExpandedCard = null; // To keep track of the currently expanded card
+
+        // Function to initialize all charts
+        function initializeCharts() {
+            // --- Configuration for BTCAmountChart (Monthly) ---
+            chartConfigs.BTCAmountChart = {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '',
+                        data: [],
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderWidth: 1,
+                        yAxisID: 'y-amount'
+                    }, {
+                        label: '',
+                        data: [],
+                        type: 'line',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderWidth: 2,
+                        fill: false,
+                        yAxisID: 'y-price'
+                    }]
                 },
-                scales: {
-                    'y-amount': {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        beginAtZero: true,
-                        title: {
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { title: { display: false } },
+                    scales: {
+                        'y-amount': {
+                            type: 'linear',
                             display: true,
-                            text: 'BTC Amount'
+                            position: 'left',
+                            beginAtZero: true,
+                            title: { display: true, text: 'BTC Amount' }
+                        },
+                        'y-price': {
+                            type: 'logarithmic',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: false,
+                            title: { display: true, text: 'BTC Close Price' },
+                            grid: { drawOnChartArea: false },
+                        },
+                    }
+                }
+            };
+
+            // --- Configuration for BTCSizeDistributionChart (Daily) ---
+            const sizeLabels = [
+                "0-0.001 BTC", "0.001-0.01 BTC", "0.01-0.1 BTC",
+                "0.1-1 BTC", "1-10 BTC", "10-100 BTC",
+                "100-1000 BTC", "1000+ BTC"
+            ];
+            chartConfigs.BTCSizeDistributionChart = {
+                type: 'bar',
+                data: {
+                    labels: sizeLabels,
+                    datasets: [{
+                        label: 'Number of Transactions',
+                        data: [],
+                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { title: { display: false } },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Transaction Size (BTC)'
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Transactions'
+                            },
+                            ticks: {
+                                precision: 0
+                            }
                         }
-                    },
-                    'y-price': {
-                        type: 'logarithmic', // Use logarithmic scale for price
-                        display: true,
-                        position: 'right',
-                        beginAtZero: false, // Prices don't start at zero
-                        title: {
-                            display: true,
-                            text: 'BTC Close Price'
-                        },
-                        grid: {
-                            drawOnChartArea: false, // Only draw grid lines for the primary Y axis
-                        },
-                    },
+                    }
+                }
+            };
+
+            // Initialize BTCAmountChart in its card
+            const btcAmountCanvas = document.getElementById('BTCAmountChart');
+            if (btcAmountCanvas) {
+                const btcAmountCtx = btcAmountCanvas.getContext('2d');
+                activeChartInstances.BTCAmountChart = new Chart(btcAmountCtx, chartConfigs.BTCAmountChart);
+                updateMonthlyChart(activeChartInstances.BTCAmountChart);
+            }
+
+            // Initialize BTCSizeDistributionChart in its card
+            const btcSizeCanvas = document.getElementById('BTCSizeDistributionChart');
+            if (btcSizeCanvas) {
+                const btcSizeCtx = btcSizeCanvas.getContext('2d');
+                activeChartInstances.BTCSizeDistributionChart = new Chart(btcSizeCtx, chartConfigs.BTCSizeDistributionChart);
+                updateDailySizeChart(activeChartInstances.BTCSizeDistributionChart);
+            }
+        }
+
+        // Function to update the Monthly BTC Amount/Price chart data
+        function updateMonthlyChart(chartInstanceToUpdate) {
+            const currentMonth = monthKeys[currentMonthIndex];
+            const monthAmountData = monthlyAmountData[currentMonth];
+            const monthPriceData = monthlyPriceData[currentMonth];
+
+            const labels = monthAmountData.map(item => item.time.substring(8)); // Take just the day part for display on the x-axis
+
+            if (chartInstanceToUpdate && chartInstanceToUpdate.canvas.id === 'BTCAmountChart') {
+                chartInstanceToUpdate.data.labels = labels;
+                chartInstanceToUpdate.data.datasets[0].label = "BTC Amount - " + currentMonth;
+                chartInstanceToUpdate.data.datasets[0].data = monthAmountData.map(item => item.tx_count);
+
+                chartInstanceToUpdate.data.datasets[1].label = "BTC Close Price - " + currentMonth;
+                chartInstanceToUpdate.data.datasets[1].data = monthPriceData.map(item => item.close);
+
+                chartInstanceToUpdate.update();
+
+                // Update button states
+                const prevMonthButton = document.getElementById('prevMonthButton');
+                const nextMonthButton = document.getElementById('nextMonthButton');
+                if (prevMonthButton && nextMonthButton) {
+                    prevMonthButton.disabled = (currentMonthIndex === 0);
+                    nextMonthButton.disabled = (currentMonthIndex === monthKeys.length - 1);
                 }
             }
-        };
-
-        // Initialize the BTCAmountChart in its card
-        const ctx = document.getElementById('BTCAmountChart')?.getContext('2d');
-        if (ctx) {
-            activeCharts.BTCAmountChart = new Chart(ctx, chartConfigs.BTCAmountChart);
-            updateChart(); // Call updateChart to populate initial data
-        }
-    }
-
-    // Function to update the chart data based on the current month
-    function updateChart() {
-        const currentMonth = monthKeys[currentMonthIndex];
-        const monthAmountData = monthlyAmountData[currentMonth];
-        const monthPriceData = monthlyPriceData[currentMonth];
-
-        const labels = monthAmountData.map(item => item.time);
-
-        // Determine which chart instance to update: the one in the card or the one in the modal
-        const chartToUpdate = activeCharts.modalChartInstance || activeCharts.BTCAmountChart;
-
-        if (chartToUpdate) {
-            chartToUpdate.data.labels = labels;
-            chartToUpdate.data.datasets[0].label = "BTC Amount - " + currentMonth;
-            chartToUpdate.data.datasets[0].data = monthAmountData.map(item => item.tx_count);
-
-            chartToUpdate.data.datasets[1].label = "BTC Close Price - " + currentMonth;
-            chartToUpdate.data.datasets[1].data = monthPriceData.map(item => item.close);
-
-            chartToUpdate.update();
         }
 
-        // Enable/disable buttons based on current month index, only if they exist (i.e., in modal)
-        const prevButton = document.getElementById('modalPrevButton');
-        const nextButton = document.getElementById('modalNextButton');
+        // Function to update the Daily BTC Transaction Size Distribution chart data
+        function updateDailySizeChart(chartInstanceToUpdate) {
+            const currentDay = dailyTransactionSizeKeys[currentDayIndex];
+            const daySizeData = transactionSizeData[currentDay];
 
-        if (prevButton && nextButton) {
-            prevButton.disabled = (currentMonthIndex === 0);
-            nextButton.disabled = (currentMonthIndex === monthKeys.length - 1);
-        }
-    }
+            const labels = Object.keys(daySizeData);
+            const dataValues = Object.values(daySizeData);
 
-    // Wait for DOM
-    document.addEventListener('DOMContentLoaded', () => {
-        initializeCharts();
-    });
+            if (chartInstanceToUpdate && chartInstanceToUpdate.canvas.id === 'BTCSizeDistributionChart') {
+                chartInstanceToUpdate.data.labels = labels;
+                chartInstanceToUpdate.data.datasets[0].data = dataValues;
+                chartInstanceToUpdate.data.datasets[0].label = `Number of Transactions (${currentDay})`;
 
-    const cardModal = document.getElementById('cardModal');
-    const modalContentDiv = document.getElementById('modalContent');
-    let currentExpandedChartId = null;
+                chartInstanceToUpdate.update();
 
-    // Open the modal and extend card
-    document.querySelectorAll('.w3-card-4').forEach(card => {
-        card.addEventListener('click', function() {
-            const chartId = this.dataset.chartId;
-            const cardTitle = this.querySelector('h3').textContent;
-
-            if (chartId && chartConfigs[chartId]) {
-                currentExpandedChartId = chartId;
-
-                // Destroy the chart instance in the original card
-                if (activeCharts[chartId]) {
-                    activeCharts[chartId].destroy();
-                    delete activeCharts[chartId];
+                // Update button states
+                const prevDayButton = document.getElementById('prevDayButton');
+                const nextDayButton = document.getElementById('nextDayButton');
+                if (prevDayButton && nextDayButton) {
+                    prevDayButton.disabled = (currentDayIndex === 0);
+                    nextDayButton.disabled = (currentDayIndex === dailyTransactionSizeKeys.length - 1);
                 }
-
-                // Inject modal content including buttons
-                modalContentDiv.innerHTML = `
-                    <h3 class="w3-center w3-padding-16">${cardTitle}</h3>
-                    <div class="chart-container" style="height: auto; max-height: 80vh;">
-                        <canvas id="modalChart"></canvas>
-                    </div>
-                    <div class="w3-container w3-center w3-padding-small">
-                        <button id="modalPrevButton" class="w3-button w3-light-grey w3-round-large w3-margin-right">Previous Month</button>
-                        <button id="modalNextButton" class="w3-button w3-light-grey w3-round-large">Next Month</button>
-                    </div>
-                `;
-
-                const modalChartCtx = document.getElementById('modalChart').getContext('2d');
-                // Deep clone the config to ensure independence
-                const configForModal = JSON.parse(JSON.stringify(chartConfigs[chartId]));
-                activeCharts['modalChartInstance'] = new Chart(modalChartCtx, configForModal);
-
-                // Add event listeners for navigation buttons in the modal
-                document.getElementById('modalPrevButton').addEventListener('click', () => {
-                    currentMonthIndex = Math.max(0, currentMonthIndex - 1);
-                    updateChart();
-                });
-
-                document.getElementById('modalNextButton').addEventListener('click', () => {
-                    currentMonthIndex = Math.min(monthKeys.length - 1, currentMonthIndex + 1);
-                    updateChart();
-                });
-
-                // Update the chart in the modal to show the correct month data
-                updateChart(); // This will use activeCharts.modalChartInstance now
-
-                cardModal.style.display = 'block';
             }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCharts();
+            const dashboardContainer = document.querySelector('.dashboard-container');
+
+            document.querySelectorAll('.w3-card-4').forEach(card => {
+                const chartId = card.dataset.chartId;
+                const chartInstance = activeChartInstances[chartId];
+                const closeButton = card.querySelector('.close-button');
+
+                // Click listener for expanding the card
+                card.addEventListener('click', function (event) {
+                    // Prevent click on card when clicking a button inside it
+                    if (event.target.tagName === 'BUTTON' || event.target.classList.contains('close-button')) {
+                        return;
+                    }
+
+                    if (!this.classList.contains('expanded')) {
+                        // If another card is expanded, close it first
+                        if (currentExpandedCard) {
+                            currentExpandedCard.querySelector('.close-button').click();
+                        }
+
+                        // Expand this card
+                        this.classList.add('expanded');
+                        closeButton.style.display = 'flex'; // Show close button
+
+                        currentExpandedCard = this;
+
+                        // Update button states for the specific chart (ensuring correct month/day is loaded)
+                        if (chartId === 'BTCAmountChart') {
+                            updateMonthlyChart(chartInstance);
+                        } else if (chartId === 'BTCSizeDistributionChart') {
+                            updateDailySizeChart(chartInstance);
+                        }
+
+                        // Scroll to the top of the page
+                        this.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                        // Resize chart after expansion
+                        // Timeout to allow CSS transitions to complete before Chart.js redraws
+                        setTimeout(() => chartInstance.resize(), 300);
+                    }
+                });
+
+                // Click listener for closing the expanded card
+                closeButton.addEventListener('click', function () {
+                    if (card.classList.contains('expanded')) {
+                        card.classList.remove('expanded');
+                        closeButton.style.display = 'none'; // Hide close button
+
+                        currentExpandedCard = null;
+
+                        // Resize chart back to original size
+                        // Timeout to allow CSS transitions to complete before Chart.js redraws
+                        setTimeout(() => chartInstance.resize(), 300);
+                    }
+                });
+
+                // Add navigation functionality
+                // These event listeners are attached once per card
+                if (chartId === 'BTCAmountChart') {
+                    const prevMonthButton = card.querySelector('#prevMonthButton');
+                    const nextMonthButton = card.querySelector('#nextMonthButton');
+
+                    if (prevMonthButton) {
+                        prevMonthButton.addEventListener('click', () => {
+                            currentMonthIndex = Math.max(0, currentMonthIndex - 1);
+                            updateMonthlyChart(chartInstance);
+                        });
+                    }
+                    if (nextMonthButton) {
+                        nextMonthButton.addEventListener('click', () => {
+                            currentMonthIndex = Math.min(monthKeys.length - 1, currentMonthIndex + 1);
+                            updateMonthlyChart(chartInstance);
+                        });
+                    }
+                } else if (chartId === 'BTCSizeDistributionChart') {
+                    const prevDayButton = card.querySelector('#prevDayButton');
+                    const nextDayButton = card.querySelector('#nextDayButton');
+
+                    if (prevDayButton) {
+                        prevDayButton.addEventListener('click', () => {
+                            currentDayIndex = Math.max(0, currentDayIndex - 1);
+                            updateDailySizeChart(chartInstance);
+                        });
+                    }
+                    if (nextDayButton) {
+                        nextDayButton.addEventListener('click', () => {
+                            currentDayIndex = Math.min(dailyTransactionSizeKeys.length - 1, currentDayIndex + 1);
+                            updateDailySizeChart(chartInstance);
+                        });
+                    }
+                }
+            });
         });
-    });
+    </script>
 
-    function closeModal() {
-        cardModal.style.display = 'none';
+    </body>
 
-        // Destroy the chart in the modal
-        if (activeCharts['modalChartInstance']) {
-            activeCharts['modalChartInstance'].destroy();
-            delete activeCharts['modalChartInstance'];
-        }
-
-        // Graphic restore in the original card
-        if (currentExpandedChartId) {
-            const originalCanvas = document.getElementById(currentExpandedChartId);
-            if (originalCanvas) {
-                const originalCtx = originalCanvas.getContext('2d');
-
-                originalCtx.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
-                activeCharts[currentExpandedChartId] = new Chart(originalCtx, chartConfigs[currentExpandedChartId]);
-
-                // Update the chart in the original card to show the current month data
-                updateChart(); // This will use activeCharts.BTCAmountChart now
-            }
-        }
-        currentExpandedChartId = null; // Reset ID
-    }
-
-    // Close the modal on click outside of its area
-    window.onclick = function(event) {
-        if (event.target == cardModal) {
-            closeModal();
-        }
-    }
-</script>
+    </html>
