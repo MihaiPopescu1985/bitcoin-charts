@@ -9,6 +9,10 @@ title: Bitcoin charts
         <span class="close-button">&times;</span>
         <div class="w3-container w3-center w3-padding-16">
             <h3>Daily BTC Amount Transactioned & Close Price</h3>
+            <p class="chart-description">This chart displays the daily total amount of Bitcoin transacted alongside its
+                closing price. Data extracted from Bitcoin Blockchain.</p>
+            <p class="chart-note">Note: The BTC close price is displayed on a logarithmic scale for better visibility of
+                changes over time.</p>
         </div>
         <div class="chart-container">
             <canvas id="BTCAmountChart"></canvas>
@@ -25,6 +29,11 @@ title: Bitcoin charts
         <span class="close-button">&times;</span>
         <div class="w3-container w3-center w3-padding-16">
             <h3>Daily BTC Transaction Size Distribution</h3>
+            <p class="chart-description">This chart shows the distribution of Bitcoin transaction sizes for a specific
+                day. It categorizes transactions into size ranges to visualize how many transactions fall into each
+                category.</p>
+            <p class="chart-note">Note: The size ranges are defined as follows: 0-0.001 BTC, 0.001-0.01 BTC, 0.01-0.1
+                BTC, 0.1-1 BTC, 1-10 BTC, 10-100 BTC, 100-1000 BTC, and 1000+ BTC.</p>
         </div>
         <div class="chart-container">
             <canvas id="BTCSizeDistributionChart"></canvas>

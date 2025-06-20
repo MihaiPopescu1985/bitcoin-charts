@@ -129,3 +129,13 @@ body, html {
     opacity: 0.5;
     cursor: not-allowed;
 }
+.chart-description,
+.chart-note {
+    font-size: 0.85em; /* Slightly smaller font than body text */
+    color: #666; /* A softer, less prominent grey color */
+    margin-top: -8px; /* Reduce space between title and description */
+    margin-bottom: 8px; /* Reduce space between description and chart */
+    padding: 0 20px; /* Keep horizontal padding to prevent text from touching edges */
+    text-align: left; /* Overrides any inherited center alignment from w3-center */
+    line-height: 1.4; /* Adjust line height for compactness, if needed */
+}
