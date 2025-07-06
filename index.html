@@ -2,363 +2,147 @@
 layout: dashboard
 title: Bitcoin charts
 ---
-<div class="dashboard-container">
 
-    <!-- Card 1: Daily BTC Amount Transactioned and Close Price -->
-    <div class="w3-card-4" data-chart-id="BTCAmountChart" id="BTCAmountCard">
-        <span class="close-button">&times;</span>
-        <div class="w3-container w3-center w3-padding-16">
-            <h3>Daily BTC Amount Transactioned & Close Price</h3>
-            <p class="chart-description">This chart displays the daily total amount of Bitcoin transacted alongside its
-                closing price. Data extracted from Bitcoin Blockchain.</p>
-            <p class="chart-note">Note: The BTC close price is displayed on a logarithmic scale for better visibility of
-                changes over time.</p>
-        </div>
-        <div class="chart-container">
-            <canvas id="BTCAmountChart"></canvas>
-        </div>
-        <div class="chart-controls">
-            <button id="prevMonthButton" class="w3-button w3-light-grey w3-round-large w3-margin-right">Previous
-                Month</button>
-            <button id="nextMonthButton" class="w3-button w3-light-grey w3-round-large">Next Month</button>
-        </div>
-    </div>
+<div class="w3-container w3-center w3-padding-16">
+    <h3>Daily BTC Amount Transactioned & Close Price</h3>
+    <p class="chart-description w3-center">This chart displays the daily total amount of Bitcoin transacted alongside its
+        closing price. Data extracted from Bitcoin Blockchain.</p>
+</div>
 
-    <!-- Card 2: Daily BTC Transaction Size Distribution -->
-    <div class="w3-card-4" data-chart-id="BTCSizeDistributionChart" id="BTCSizeDistributionCard">
-        <span class="close-button">&times;</span>
-        <div class="w3-container w3-center w3-padding-16">
-            <h3>Daily BTC Transaction Size Distribution</h3>
-            <p class="chart-description">This chart shows the distribution of Bitcoin transaction sizes for a specific
-                day. It categorizes transactions into size ranges to visualize how many transactions fall into each
-                category.</p>
-            <p class="chart-note">Note: The size ranges are defined as follows: 0-0.001 BTC, 0.001-0.01 BTC, 0.01-0.1
-                BTC, 0.1-1 BTC, 1-10 BTC, 10-100 BTC, 100-1000 BTC, and 1000+ BTC.</p>
-        </div>
-        <div class="chart-container">
-            <canvas id="BTCSizeDistributionChart"></canvas>
-        </div>
-        <div class="chart-controls">
-            <button id="prevDayButton" class="w3-button w3-light-grey w3-round-large w3-margin-right">Previous
-                Day</button>
-            <button id="nextDayButton" class="w3-button w3-light-grey w3-round-large">Next Day</button>
-        </div>
-    </div>
+<div id="btc_amount_vs_price_chart" class="loading-message">Loading chart data...</div>
 
-    <script>
-        // Data sources
-        window.btcDailyAmountData = {{ site.data.daily_amounts | jsonify }};
-        window.btcDailyPriceData = {{ site.data.daily_close_price | jsonify }};
-        window.btcDailyTransactionSizeData = {{ site.data.daily_transaction_size | jsonify }};
+<script type="text/javascript">
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(fetchAndDrawChart);
 
-        // --- Chart Data Processing ---
-        const amountData = window.btcDailyAmountData;
-        const priceData = window.btcDailyPriceData;
-        const transactionSizeData = window.btcDailyTransactionSizeData;
+    async function fetchAndDrawChart() {
+        try {
+            const dailyAmounts = {{ site.data.daily_amounts | jsonify }};
+            const dailyClose = {{ site.data.daily_close_price | jsonify }};
 
-        // Helper functions for existing BTC Amount/Price Chart
-        function transformData(data) {
-            return Object.entries(data).map(([time, value]) => ({ time, value }));
-        }
-        const amountArray = transformData(amountData);
-        const priceArray = transformData(priceData);
+            // Process and combine data for Google Charts DataTable
+            const combinedData = [];
 
-        function getYearMonth(dateString) { return dateString.substring(0, 7); } // "YYYY-MM"
-        function getDay(dateString) { return dateString.substring(8); } // "DD"
+            // Collect all unique dates and sort them
+            const allDates = new Set();
+            Object.keys(dailyAmounts).forEach(date => allDates.add(date));
+            Object.keys(dailyClose).forEach(date => allDates.add(date));
 
-        // Group data by month
-        const monthlyAmountData = {};
-        amountArray.forEach(item => {
-            const yearMonth = getYearMonth(item.time);
-            const day = getDay(item.time);
-            if (!monthlyAmountData[yearMonth]) { monthlyAmountData[yearMonth] = []; }
-            monthlyAmountData[yearMonth].push({ time: day, tx_count: item.value });
-        });
+            const sortedDates = Array.from(allDates).sort();
 
-        const monthlyPriceData = {};
-        priceArray.forEach(item => {
-            const yearMonth = getYearMonth(item.time);
-            const day = getDay(item.time);
-            if (!monthlyPriceData[yearMonth]) { monthlyPriceData[yearMonth] = []; }
-            monthlyPriceData[yearMonth].push({ time: day, close: item.value });
-        });
+            // Add header row for the DataTable
+            combinedData.push([
+                'Date',
+                'Daily Amount',
+                { type: 'string', role: 'tooltip', p: { html: true } },
+                'Close Value'
+            ]);
 
-        // Sort months in descending order
-        const monthKeys = Object.keys(monthlyAmountData).sort();
-        let currentMonthIndex = monthKeys.length - 1; // Start with the last month
+            // Populate data rows
+            sortedDates.forEach(date => {
+                const amountRaw = dailyAmounts[date];
+                const amount = amountRaw != null ? parseFloat(amountRaw) : null;
 
-        // Daily BTC Transaction Size Distribution Chart
-        const dailyTransactionSizeKeys = Object.keys(transactionSizeData).sort();
-        let currentDayIndex = dailyTransactionSizeKeys.length - 1; // Start with the last day
+                const closeRaw = dailyClose[date];
+                const close = closeRaw != null ? parseFloat(closeRaw) : null;
 
-        // --- Chart Management ---
-        const chartConfigs = {};
-        const activeChartInstances = {}; // Stores live Chart.js objects
-
-        let currentExpandedCard = null; // To keep track of the currently expanded card
-
-        // Function to initialize all charts
-        function initializeCharts() {
-            // --- Configuration for BTCAmountChart (Monthly) ---
-            chartConfigs.BTCAmountChart = {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: '',
-                        data: [],
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                        borderWidth: 1,
-                        yAxisID: 'y-amount'
-                    }, {
-                        label: '',
-                        data: [],
-                        type: 'line',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                        borderWidth: 2,
-                        fill: false,
-                        yAxisID: 'y-price'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { title: { display: false } },
-                    scales: {
-                        'y-amount': {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            beginAtZero: true,
-                            title: { display: true, text: 'BTC Amount' }
-                        },
-                        'y-price': {
-                            type: 'logarithmic',
-                            display: true,
-                            position: 'right',
-                            beginAtZero: false,
-                            title: { display: true, text: 'BTC Close Price' },
-                            grid: { drawOnChartArea: false },
-                        },
-                    }
+                if (isNaN(amount) && amountRaw !== undefined) {
+                    console.warn(`Non-numeric amount for date ${date}:`, amountRaw);
                 }
-            };
 
-            // --- Configuration for BTCSizeDistributionChart (Daily) ---
-            const sizeLabels = [
-                "0-0.001 BTC", "0.001-0.01 BTC", "0.01-0.1 BTC",
-                "0.1-1 BTC", "1-10 BTC", "10-100 BTC",
-                "100-1000 BTC", "1000+ BTC"
-            ];
-            chartConfigs.BTCSizeDistributionChart = {
-                type: 'bar',
-                data: {
-                    labels: sizeLabels,
-                    datasets: [{
-                        label: 'Number of Transactions',
-                        data: [],
-                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { title: { display: false } },
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Transaction Size (BTC)'
-                            },
-                            grid: {
-                                display: false
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Number of Transactions'
-                            },
-                            ticks: {
-                                precision: 0
-                            }
-                        }
-                    }
-                }
-            };
+                const amountTooltip = amount !== null
+                    ? `<div style="padding:5px;"> ${amount}</div>`
+                    : '';
 
-            // Initialize BTCAmountChart in its card
-            const btcAmountCanvas = document.getElementById('BTCAmountChart');
-            if (btcAmountCanvas) {
-                const btcAmountCtx = btcAmountCanvas.getContext('2d');
-                activeChartInstances.BTCAmountChart = new Chart(btcAmountCtx, chartConfigs.BTCAmountChart);
-                updateMonthlyChart(activeChartInstances.BTCAmountChart);
-            }
-
-            // Initialize BTCSizeDistributionChart in its card
-            const btcSizeCanvas = document.getElementById('BTCSizeDistributionChart');
-            if (btcSizeCanvas) {
-                const btcSizeCtx = btcSizeCanvas.getContext('2d');
-                activeChartInstances.BTCSizeDistributionChart = new Chart(btcSizeCtx, chartConfigs.BTCSizeDistributionChart);
-                updateDailySizeChart(activeChartInstances.BTCSizeDistributionChart);
-            }
-        }
-
-        // Function to update the Monthly BTC Amount/Price chart data
-        function updateMonthlyChart(chartInstanceToUpdate) {
-            const currentMonth = monthKeys[currentMonthIndex];
-            const monthAmountData = monthlyAmountData[currentMonth];
-            const monthPriceData = monthlyPriceData[currentMonth];
-
-            const labels = monthAmountData.map(item => item.time.substring(8)); // Take just the day part for display on the x-axis
-
-            if (chartInstanceToUpdate && chartInstanceToUpdate.canvas.id === 'BTCAmountChart') {
-                chartInstanceToUpdate.data.labels = labels;
-                chartInstanceToUpdate.data.datasets[0].label = "BTC Amount - " + currentMonth;
-                chartInstanceToUpdate.data.datasets[0].data = monthAmountData.map(item => item.tx_count);
-
-                chartInstanceToUpdate.data.datasets[1].label = "BTC Close Price - " + currentMonth;
-                chartInstanceToUpdate.data.datasets[1].data = monthPriceData.map(item => item.close);
-
-                chartInstanceToUpdate.update();
-
-                // Update button states
-                const prevMonthButton = document.getElementById('prevMonthButton');
-                const nextMonthButton = document.getElementById('nextMonthButton');
-                if (prevMonthButton && nextMonthButton) {
-                    prevMonthButton.disabled = (currentMonthIndex === 0);
-                    nextMonthButton.disabled = (currentMonthIndex === monthKeys.length - 1);
-                }
-            }
-        }
-
-        // Function to update the Daily BTC Transaction Size Distribution chart data
-        function updateDailySizeChart(chartInstanceToUpdate) {
-            const currentDay = dailyTransactionSizeKeys[currentDayIndex];
-            const daySizeData = transactionSizeData[currentDay];
-
-            const labels = Object.keys(daySizeData);
-            const dataValues = Object.values(daySizeData);
-
-            if (chartInstanceToUpdate && chartInstanceToUpdate.canvas.id === 'BTCSizeDistributionChart') {
-                chartInstanceToUpdate.data.labels = labels;
-                chartInstanceToUpdate.data.datasets[0].data = dataValues;
-                chartInstanceToUpdate.data.datasets[0].label = `Number of Transactions (${currentDay})`;
-
-                chartInstanceToUpdate.update();
-
-                // Update button states
-                const prevDayButton = document.getElementById('prevDayButton');
-                const nextDayButton = document.getElementById('nextDayButton');
-                if (prevDayButton && nextDayButton) {
-                    prevDayButton.disabled = (currentDayIndex === 0);
-                    nextDayButton.disabled = (currentDayIndex === dailyTransactionSizeKeys.length - 1);
-                }
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeCharts();
-            const dashboardContainer = document.querySelector('.dashboard-container');
-
-            document.querySelectorAll('.w3-card-4').forEach(card => {
-                const chartId = card.dataset.chartId;
-                const chartInstance = activeChartInstances[chartId];
-                const closeButton = card.querySelector('.close-button');
-
-                // Click listener for expanding the card
-                card.addEventListener('click', function (event) {
-                    // Prevent click on card when clicking a button inside it
-                    if (event.target.tagName === 'BUTTON' || event.target.classList.contains('close-button')) {
-                        return;
-                    }
-
-                    if (!this.classList.contains('expanded')) {
-                        // If another card is expanded, close it first
-                        if (currentExpandedCard) {
-                            currentExpandedCard.querySelector('.close-button').click();
-                        }
-
-                        // Expand this card
-                        this.classList.add('expanded');
-                        closeButton.style.display = 'flex'; // Show close button
-
-                        currentExpandedCard = this;
-
-                        // Update button states for the specific chart (ensuring correct month/day is loaded)
-                        if (chartId === 'BTCAmountChart') {
-                            updateMonthlyChart(chartInstance);
-                        } else if (chartId === 'BTCSizeDistributionChart') {
-                            updateDailySizeChart(chartInstance);
-                        }
-
-                        // Scroll to the top of the page
-                        this.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-                        // Resize chart after expansion
-                        // Timeout to allow CSS transitions to complete before Chart.js redraws
-                        setTimeout(() => chartInstance.resize(), 300);
-                    }
-                });
-
-                // Click listener for closing the expanded card
-                closeButton.addEventListener('click', function () {
-                    if (card.classList.contains('expanded')) {
-                        card.classList.remove('expanded');
-                        closeButton.style.display = 'none'; // Hide close button
-
-                        currentExpandedCard = null;
-
-                        // Resize chart back to original size
-                        // Timeout to allow CSS transitions to complete before Chart.js redraws
-                        setTimeout(() => chartInstance.resize(), 300);
-                    }
-                });
-
-                // Add navigation functionality
-                // These event listeners are attached once per card
-                if (chartId === 'BTCAmountChart') {
-                    const prevMonthButton = card.querySelector('#prevMonthButton');
-                    const nextMonthButton = card.querySelector('#nextMonthButton');
-
-                    if (prevMonthButton) {
-                        prevMonthButton.addEventListener('click', () => {
-                            currentMonthIndex = Math.max(0, currentMonthIndex - 1);
-                            updateMonthlyChart(chartInstance);
-                        });
-                    }
-                    if (nextMonthButton) {
-                        nextMonthButton.addEventListener('click', () => {
-                            currentMonthIndex = Math.min(monthKeys.length - 1, currentMonthIndex + 1);
-                            updateMonthlyChart(chartInstance);
-                        });
-                    }
-                } else if (chartId === 'BTCSizeDistributionChart') {
-                    const prevDayButton = card.querySelector('#prevDayButton');
-                    const nextDayButton = card.querySelector('#nextDayButton');
-
-                    if (prevDayButton) {
-                        prevDayButton.addEventListener('click', () => {
-                            currentDayIndex = Math.max(0, currentDayIndex - 1);
-                            updateDailySizeChart(chartInstance);
-                        });
-                    }
-                    if (nextDayButton) {
-                        nextDayButton.addEventListener('click', () => {
-                            currentDayIndex = Math.min(dailyTransactionSizeKeys.length - 1, currentDayIndex + 1);
-                            updateDailySizeChart(chartInstance);
-                        });
-                    }
-                }
+                combinedData.push([
+                    new Date(date),
+                    amount,
+                    amountTooltip,
+                    close
+                ]);
             });
-        });
-    </script>
 
-    </body>
+            const data = google.visualization.arrayToDataTable(combinedData);
 
-    </html>
+            const options = {
+                // title: 'BTC Daily Amounts vs. Close Price Values',
+                tooltip: { isHtml: true },
+                titleTextStyle: {
+                    fontSize: 20,
+                    bold: true
+                },
+                seriesType: 'bars',
+                series: {
+                    0: {
+                        type: 'bars',
+                        targetAxisIndex: 0,
+                        color: '#4285F4'
+                    },
+                    1: {
+                        type: 'line',
+                        targetAxisIndex: 1,
+                        color: '#EA4335',
+                        lineWidth: 2,
+                        pointSize: 0
+                    }
+                },
+            hAxis: {
+                title: 'Date',
+                slantedText: false,
+                slantedTextAngle: 0,
+                format: 'MM/yyyy',
+                gridlines: { count: 15 },
+                textStyle: { fontSize: 10 },
+                maxTextLines: 1
+            },
+                vAxes: {
+                    0: {
+                        title: 'Daily Amount',
+                        titleTextStyle: { color: '#4285F4' },
+                        viewWindow: { min: 0 }
+                    },
+                    1: {
+                        title: 'Close Value',
+                        titleTextStyle: { color: '#EA4335' },
+                        side: 'right',
+                        gridlines: { color: 'transparent' }
+                    }
+                },
+                legend: { position: 'bottom' },
+                chartArea: {
+                    left: '10%',
+                    right: '10%',
+                    width: '80%',
+                    height: '75%'
+                },
+                explorer: {
+                    actions: ['dragToPan', 'rightClickToReset', 'scrollToZoom'],
+                    axis: 'horizontal',
+                    keepInBounds: true,
+                    maxZoomIn: 0.1,
+                    zoomDelta: 1.1
+                },
+                focusTarget: 'category'
+            };
+
+            const chart = new google.visualization.ComboChart(document.getElementById('btc_amount_vs_price_chart'));
+            chart.draw(data, options);
+
+        } catch (error) {
+            console.error("Error fetching or processing data:", error);
+            document.getElementById('btc_amount_vs_price_chart').innerText = "Failed to load chart data.";
+        }
+    }
+</script>
+
+<!--
+TODO: next chart description
+<div class="w3-container w3-center w3-padding-16">
+    <h3>Daily BTC Transaction Size Distribution</h3>
+    <p class="chart-description">This chart shows the distribution of Bitcoin transaction sizes for a specific
+        day. It categorizes transactions into size ranges to visualize how many transactions fall into each
+        category.</p>
+    <p class="chart-note">Note: The size ranges are defined as follows: 0-0.001 BTC, 0.001-0.01 BTC, 0.01-0.1
+        BTC, 0.1-1 BTC, 1-10 BTC, 10-100 BTC, 100-1000 BTC, and 1000+ BTC.</p>
+</div>
+-->
