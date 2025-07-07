@@ -1,7 +1,8 @@
 body {
     font-family: Arial, sans-serif;
 }
-#btc_amount_vs_price_chart {
+#btc_amount_vs_price_chart,
+#btc_tranzactions_size_chart {
     width: 100%;
     height: 600px;
 }
