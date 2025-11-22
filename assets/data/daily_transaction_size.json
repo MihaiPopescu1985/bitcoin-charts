@@ -1,0 +1,4 @@
+---
+layout: null
+---
+{{ site.data.daily_transaction_size | jsonify }}

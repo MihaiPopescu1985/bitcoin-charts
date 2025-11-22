@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>{{ page.title | default: site.title }}</title>
+  <link rel="icon" type="image/svg+xml" href="{{ site.baseurl }}/assets/favicon.svg">
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/styles/main.css">
+  <meta name="theme-color" content="#f7931a">
+</head>
+<body>
+  {{ content }}
+  <script>window.JEKYLL_BASE = "{{ site.baseurl | default: '' }}";</script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@6/dist/echarts.min.js"></script>
+  <script src="{{ site.baseurl }}/assets/scripts/dashboard.js"></script>
+</body>
+</html>
