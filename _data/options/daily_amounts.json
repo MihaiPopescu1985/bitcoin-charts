@@ -1,0 +1,12 @@
+{
+  "title": { "text": "Daily Amounts" },
+  "tooltip": { "trigger": "axis" },
+  "xAxis": { "type": "category" },
+  "yAxis": { "type": "value" },
+  "series": [
+    {
+      "type": "line",
+      "smooth": true
+    }
+  ]
+}

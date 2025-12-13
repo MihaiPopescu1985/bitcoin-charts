@@ -1,4 +1,0 @@
----
-layout: null
----
-{{ site.data.daily_close_price | jsonify }}

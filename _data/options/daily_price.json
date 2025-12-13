@@ -1,0 +1,13 @@
+{
+  "title": { "text": "Daily Close Price" },
+  "tooltip": { "trigger": "axis" },
+  "xAxis": { "type": "category" },
+  "yAxis": { "type": "value" },
+  "series": [
+    {
+      "type": "line",
+      "smooth": true,
+      "encode": { "x": "date", "y": "close" }
+    }
+  ]
+}

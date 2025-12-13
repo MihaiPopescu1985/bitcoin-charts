@@ -1,129 +1,85 @@
-:root{
-  --gap:16px;
-  --card-bg:#fff;
-  --page-bg:#f4f6f8;
-  --accent:#35424a;
-  --footer-height:56px; /* adjust if you want a different footer size */
+/* Layout General Flexbox */
+body {
+    display: flex; /* Activează modul flexbox pe body */
+    flex-direction: column; /* Ordonează elementele pe verticală (coloană) */
+    min-height: 100vh; /* Ocupă toată înălțimea vizibilă */
+    margin: 0;
+    font-family: sans-serif;
+    background-color: #f4f4f4;
 }
 
-*{box-sizing:border-box}
-
-/* normal flow page (no full-height flex) so content only takes needed space */
-body{
-  margin:0;
-  font-family:Inter,Arial,Helvetica,sans-serif;
-  background:var(--page-bg);
-  color:#222;
+/* Container pentru zona de conținut principal (Main + Aside, deși Aside e scos) */
+.content-wrapper {
+    display: flex;
+    flex-direction: row; /* Aranjează secțiunea principală și eventualele controale pe orizontală */
+    flex-grow: 1; /* Permite acestui container să ocupe spațiul rămas */
 }
 
-/* header/nav unchanged */
-header{
-  background:var(--accent);
-  color:#fff;
-  padding:10px 18px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  /* keep title vertically centered and remove default centering */
-  justify-content:flex-start;
+/* 1. Header Styles */
+.layout-header {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* Flex: nu crește, nu se micșorează, rămâne cât conținutul */
 }
-header h1{
-  margin:0;
-  font-size:1.25rem;
-  font-weight:600;
-  color:#fff;
+.layout-header .brand {
+    display: flex;
+    align-items: center;
+}
+.layout-header .logo { height: 40px; margin-right: 15px; }
+
+/* 2. Nav Styles */
+.layout-nav {
+    background: #fff;
+    border-bottom: 2px solid #ddd;
+    /* Flex: nu crește, nu se micșorează, rămâne cât conținutul */
+}
+.layout-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex; /* Aranjează butoanele pe orizontală */
+}
+.nav-btn {
+    background: none;
+    border: none;
+    padding: 15px 20px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    white-space: nowrap; /* Previne ruperea textului pe butoane */
+}
+.nav-btn:hover, .nav-btn.active {
+    background-color: #f7931a; /* Bitcoin Orange */
+    color: white;
 }
 
-/* small logo next to title */
-.logo{
-  width:36px;
-  height:36px;
-  display:block;
+/* 3. Section (Chart) Styles */
+.layout-main {
+    /* Ocupă tot spațiul orizontal disponibil în interiorul content-wrapper */
+    flex-grow: 1; 
+    background: #fff;
+    padding: 20px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
 }
 
-/* ensure good spacing on very small screens */
-@media (max-width:420px){
-  header{ padding:8px 12px; gap:8px; }
-  .logo{ width:28px; height:28px; }
-  header h1{ font-size:1rem; }
+/* 4. Aside (Controalele - deși l-am scos din HTML, păstrăm clasa pentru viitor) */
+.layout-controls {
+    /* Dacă îl reintroduci, va avea o lățime fixă, sau o parte din spațiu */
+    /* Exemplu: width: 300px; */
+    padding: 20px;
+    background: #fff;
+    border-left: 1px solid #ddd;
 }
 
-nav ul{
-  display:flex;
-  gap:8px;
-  padding:8px;
-  margin:0;
-  list-style:none;
-  justify-content:center;
-  background:#222;
-}
-nav a{color:#fff; text-decoration:none; padding:8px 12px; display:block}
-
-/* dashboard grid area: give bottom padding equal to footer height
-   so content never scrolls under the fixed footer */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
-  gap:var(--gap);
-  padding:var(--gap);
-  padding-bottom: calc(var(--gap) + var(--footer-height));
-  /* allow page to scroll naturally; footer will remain visible */
-}
-
-/* card + chart sizing: charts use min-height only (no viewport height forcing)
-   so they take the space they need and don't stretch top-to-bottom */
-.card{
-  background:var(--card-bg);
-  border-radius:8px;
-  padding:16px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.06);
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  transition: transform 220ms ease;
-}
-.card h3{margin:0 0 12px 0; font-size:1rem}
-.chart{
-  width:100%;
-  min-height:260px;     /* baseline visible size */
-  height:auto;          /* do not force to viewport fraction */
-  max-height:520px;     /* avoid overly tall charts by default */
-  transition: height 300ms ease, max-height 300ms ease;
-}
-
-/* expanded state: occupy whole row and increase chart size — only then use large viewport-based sizes */
-.card.expanded{
-  grid-column: 1 / -1;
-  z-index: 5;
-}
-.card.expanded .chart{
-  /* when expanded, allow a taller chart but keep reasonable max */
-  min-height: 360px;
-  max-height: min(75vh, 800px);
-  height: min(60vh, 700px);
-}
-
-/* fixed footer: always visible, page content scrolls above it.
-   Because .grid has bottom padding equal to footer height, nothing will be hidden behind it. */
-footer{
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: var(--footer-height);
-  line-height: var(--footer-height);
-  text-align:center;
-  padding:0 12px;
-  background:var(--accent);
-  color:#fff;
-  z-index: 999;
-  box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
-}
-
-/* smaller screens */
-@media (max-width:600px){
-  .chart{min-height:180px; max-height: none; height:auto;}
-  nav ul{flex-direction:column; align-items:center}
-  /* adjust footer height if needed on small screens */
-  :root{ --footer-height: 56px; }
+/* 5. Footer Styles */
+.layout-footer {
+    text-align: center;
+    padding: 10px;
+    background: #e0e0e0;
+    font-size: 0.8rem;
+    margin-top: auto; /* Împinge footer-ul în jos, sub tot conținutul */
 }
