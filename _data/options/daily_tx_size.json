@@ -9,6 +9,15 @@
     }
   },
   "legend": {},
+  "toolbox": {
+    "feature": {
+      "dataZoom": {
+        "yAxisIndex": "none"
+      },
+      "restore": {},
+      "saveAsImage": {}
+    }
+  },
   "grid": {
     "left": "3%",
     "right": "4%",
@@ -28,6 +37,18 @@
   "dataset": {
     "source": []
   },
+  "dataZoom": [
+    {
+      "type": "slider",
+      "xAxisIndex": 0,
+      "filterMode": "filter"
+    },
+    {
+      "type": "inside",
+      "xAxisIndex": 0,
+      "filterMode": "filter"
+    }
+  ],
   "series": [
     { "type": "bar", "stack": "total" },
     { "type": "bar", "stack": "total" },
