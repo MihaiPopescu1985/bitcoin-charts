@@ -19,7 +19,7 @@ title: BTC Pulse
     </li>
     <li>
       <button class="nav-btn" data-key="dailyPrice">
-        Daily Close Price
+        Daily Price
       </button>
     </li>
     <li>
