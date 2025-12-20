@@ -39,4 +39,8 @@ title: BTC Pulse
 <footer class="layout-footer">© BTC Pulse</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script src="{{ site.baseurl }}/assets/scripts/chart-utils.js"></script>
+<script src="{{ site.baseurl }}/assets/scripts/charts/daily_amounts.js"></script>
+<script src="{{ site.baseurl }}/assets/scripts/charts/daily_price.js"></script>
+<script src="{{ site.baseurl }}/assets/scripts/charts/daily_tx_size.js"></script>
 <script src="{{ site.baseurl }}/assets/scripts/dashboard.js"></script>

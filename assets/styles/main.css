@@ -1,18 +1,18 @@
-/* Layout General Flexbox */
+/* General flex layout */
 body {
-    display: flex; /* Activează modul flexbox pe body */
-    flex-direction: column; /* Ordonează elementele pe verticală (coloană) */
-    min-height: 100vh; /* Ocupă toată înălțimea vizibilă */
+    display: flex; /* Enable flex layout on body */
+    flex-direction: column; /* Stack elements vertically */
+    min-height: 100vh; /* Fill the visible height */
     margin: 0;
     font-family: sans-serif;
     background-color: #f4f4f4;
 }
 
-/* Container pentru zona de conținut principal (Main + Aside, deși Aside e scos) */
+/* Main content container (Main + Aside, even if Aside is removed) */
 .content-wrapper {
     display: flex;
-    flex-direction: row; /* Aranjează secțiunea principală și eventualele controale pe orizontală */
-    flex-grow: 1; /* Permite acestui container să ocupe spațiul rămas */
+    flex-direction: row; /* Lay out the main section and controls horizontally */
+    flex-grow: 1; /* Let this container take the remaining space */
 }
 
 /* 1. Header Styles */
@@ -23,7 +23,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /* Flex: nu crește, nu se micșorează, rămâne cât conținutul */
+    /* Flex: no grow, no shrink, keep content size */
 }
 .layout-header .brand {
     display: flex;
@@ -35,13 +35,13 @@ body {
 .layout-nav {
     background: #fff;
     border-bottom: 2px solid #ddd;
-    /* Flex: nu crește, nu se micșorează, rămâne cât conținutul */
+    /* Flex: no grow, no shrink, keep content size */
 }
 .layout-nav ul {
     list-style: none;
     padding: 0;
     margin: 0;
-    display: flex; /* Aranjează butoanele pe orizontală */
+    display: flex; /* Lay out buttons horizontally */
 }
 .nav-btn {
     background: none;
@@ -50,26 +50,26 @@ body {
     cursor: pointer;
     font-weight: bold;
     font-size: 1rem;
-    white-space: nowrap; /* Previne ruperea textului pe butoane */
+    white-space: nowrap; /* Prevent label wrapping */
 }
 .nav-btn:hover, .nav-btn.active {
-    background-color: #f7931a; /* Bitcoin Orange */
+    background-color: #f7931a; /* Bitcoin orange */
     color: white;
 }
 
 /* 3. Section (Chart) Styles */
 .layout-main {
-    /* Ocupă tot spațiul orizontal disponibil în interiorul content-wrapper */
+    /* Fill available horizontal space inside content-wrapper */
     flex-grow: 1; 
     background: #fff;
     padding: 20px;
     box-shadow: 0 0 5px rgba(0,0,0,0.1);
 }
 
-/* 4. Aside (Controalele - deși l-am scos din HTML, păstrăm clasa pentru viitor) */
+/* 4. Aside (Controls - removed from HTML, class kept for future) */
 .layout-controls {
-    /* Dacă îl reintroduci, va avea o lățime fixă, sau o parte din spațiu */
-    /* Exemplu: width: 300px; */
+    /* If reintroduced, it can have a fixed width or take part of the space */
+    /* Example: width: 300px; */
     padding: 20px;
     background: #fff;
     border-left: 1px solid #ddd;
@@ -81,5 +81,5 @@ body {
     padding: 10px;
     background: #e0e0e0;
     font-size: 0.8rem;
-    margin-top: auto; /* Împinge footer-ul în jos, sub tot conținutul */
+    margin-top: auto; /* Push the footer below all content */
 }
