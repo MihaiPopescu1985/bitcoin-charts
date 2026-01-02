@@ -7,7 +7,11 @@ const dataFiles = {
   dailyAmounts: {{ site.data.daily_amounts | jsonify }},
   dailyPrice: {{ site.data.daily_price | jsonify }},
   dailyTxSize: {{ site.data.daily_tx_size | jsonify }},
-  dailyPriceFeatures: {{ site.data.daily_price_features | jsonify }}
+  dailySafe: {
+    features: {{ site.data.features | jsonify }},
+    onchain: {{ site.data.onchain_features | jsonify }},
+    dailyPrice: {{ site.data.daily_price | jsonify }}
+  }
 };
 
 // Display
@@ -15,9 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Container initialization
     const chartDom = document.getElementById('main-chart-container');
+    if (!chartDom) {
+        console.error('Chart container not found.');
+        return;
+    }
     const myChart = echarts.init(chartDom);
-    const dailyPriceDesc = document.getElementById('daily-price-desc');
-    let legendLockHandler = null;
 
     // Render the chart
     function renderChart(key) {
@@ -31,35 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Reset the chart with the new options
-        if (legendLockHandler) {
-            myChart.off('legendselectchanged', legendLockHandler);
-            legendLockHandler = null;
-        }
-
-        const optionInput = key === 'dailyPrice'
-            ? { priceData: rawData, features: dataFiles.dailyPriceFeatures }
-            : rawData;
-
-        const option = chartDef.buildOption(optionInput);
+        const option = chartDef.buildOption(rawData);
         myChart.setOption(option, true);
-
-        if (chartDef.legendRequired && chartDef.legendRequired.length) {
-            legendLockHandler = (event) => {
-                chartDef.legendRequired.forEach((name) => {
-                    if (!event.selected[name]) {
-                        myChart.dispatchAction({ type: 'legendSelect', name: name });
-                    }
-                });
-            };
-            myChart.on('legendselectchanged', legendLockHandler);
-            chartDef.legendRequired.forEach((name) => {
-                myChart.dispatchAction({ type: 'legendSelect', name: name });
-            });
-        }
-
-        if (dailyPriceDesc) {
-            dailyPriceDesc.hidden = key !== 'dailyPrice';
-        }
     }
 
     // Changing charts
@@ -73,12 +52,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Logic: draw the requested chart
             const key = e.target.getAttribute('data-key');
-            renderChart(key);
+            if (key) {
+                renderChart(key);
+            }
         });
     });
 
     // Loading the first chart
-    renderChart('dailyTxSize'); 
+    const defaultKey = chartDom.dataset.chartKey || 'dailyTxSize';
+    renderChart(defaultKey);
 
     // Automatic resize
     window.addEventListener('resize', () => {
