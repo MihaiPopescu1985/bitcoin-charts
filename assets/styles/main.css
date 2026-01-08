@@ -86,3 +86,74 @@ body {
     font-size: 0.8rem;
     margin-top: auto; /* Push the footer below all content */
 }
+
+/* Blog styles */
+.blog-index .blog-header {
+    margin-bottom: 20px;
+}
+.blog-index .blog-header h1 {
+    margin: 0 0 6px;
+}
+.blog-index .blog-header p {
+    margin: 0;
+    color: #555;
+}
+.blog-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 16px;
+}
+.blog-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    background: #fff;
+}
+.blog-card__title {
+    color: #111;
+    font-size: 1.1rem;
+    text-decoration: none;
+}
+.blog-card__title:hover {
+    text-decoration: underline;
+}
+.blog-card__meta {
+    font-size: 0.85rem;
+    color: #666;
+    margin: 6px 0 10px;
+}
+.blog-card__excerpt {
+    margin: 0;
+    color: #333;
+}
+.blog-post__header h1 {
+    margin-top: 0;
+}
+.blog-post__meta {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 6px 0 14px;
+}
+.blog-post__desc {
+    color: #444;
+    margin: 0 0 18px;
+}
+.blog-post__content {
+    line-height: 1.6;
+}
+.blog-post__content h2 {
+    margin-top: 1.6rem;
+}
+.blog-post__footer {
+    margin-top: 24px;
+}
+.blog-post__footer a {
+    color: #f7931a;
+    text-decoration: none;
+    font-weight: bold;
+}
+.blog-post__footer a:hover {
+    text-decoration: underline;
+}

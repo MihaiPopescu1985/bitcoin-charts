@@ -27,22 +27,27 @@
         </a>
       </li>
       <li>
-        <a class="nav-btn {% if page.url == '/safe.html' %}active{% endif %}" href="{{ site.baseurl }}/safe.html">
+        <a class="nav-btn {% if page.url contains '/blog/' %}active{% endif %}" href="{{ site.baseurl }}/blog/">
+          Blog
+        </a>
+      </li>
+      <li>
+        <a class="nav-btn {% if page.url == '/safe/' %}active{% endif %}" href="{{ site.baseurl }}/safe/">
           SAFE
         </a>
       </li>
       <li>
-        <a class="nav-btn {% if page.url == '/daily_tx_sizes.html' %}active{% endif %}" href="{{ site.baseurl }}/daily_tx_sizes.html">
+        <a class="nav-btn {% if page.url == '/daily_tx_sizes/' %}active{% endif %}" href="{{ site.baseurl }}/daily_tx_sizes/">
           Daily Transaction Sizes
         </a>
       </li>
       <li>
-        <a class="nav-btn {% if page.url == '/daily_price.html' %}active{% endif %}" href="{{ site.baseurl }}/daily_price.html">
+        <a class="nav-btn {% if page.url == '/daily_price/' %}active{% endif %}" href="{{ site.baseurl }}/daily_price/">
           Daily Price
         </a>
       </li>
       <li>
-        <a class="nav-btn {% if page.url == '/daily_amounts.html' %}active{% endif %}" href="{{ site.baseurl }}/daily_amounts.html">
+        <a class="nav-btn {% if page.url == '/daily_amounts/' %}active{% endif %}" href="{{ site.baseurl }}/daily_amounts/">
           Daily Amounts
         </a>
       </li>
