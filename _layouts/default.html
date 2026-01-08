@@ -17,6 +17,9 @@
       <img src="{{ site.baseurl }}/assets/favicon.svg" alt="BTC Pulse" class="logo" />
       <h1>BTC Pulse</h1>
     </div>
+    <div class="last-update">
+      Last update: <time datetime="{{ site.data.last_update.iso | default: site.time | date_to_xmlschema }}">{{ site.data.last_update.iso | default: site.time | date: "%Y-%m-%d %H:%M UTC" }}</time>
+    </div>
   </header>
 
   <nav class="layout-nav">
