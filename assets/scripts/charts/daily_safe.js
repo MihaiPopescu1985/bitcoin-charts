@@ -46,7 +46,7 @@ layout: null
         ];
     }
 
-    function buildCandleSeries(dates, dailyPrice) {
+    function buildCloseSeries(dates, dailyPrice) {
         const byDate = new Map();
         (dailyPrice || []).forEach((row) => {
             if (row && row.timestamp) byDate.set(row.timestamp, row);
@@ -54,13 +54,10 @@ layout: null
 
         return dates.map((d) => {
             const row = byDate.get(d);
-            if (!row) return [null, null, null, null];
-            const open = +row.open;
+            if (!row) return null;
             const close = +row.close;
-            const low = +row.low;
-            const high = +row.high;
-            if (![open, close, low, high].every((v) => isFinite(v))) return [null, null, null, null];
-            return [open, close, low, high];
+            if (!isFinite(close)) return null;
+            return close;
         });
     }
 
@@ -85,7 +82,7 @@ layout: null
 
         const regimes = pickRegimeSeries(featuresSeries, regimeMode);
 
-        const candles = buildCandleSeries(dates, dailyPrice);
+        const closes = buildCloseSeries(dates, dailyPrice);
 
         const pCorr = seriesOrFallback(featuresSeries, "P_CORRECTION_10D_CAL", "P_CORRECTION_10D") || [];
         const pReb = seriesOrFallback(featuresSeries, "P_REBOUND_10D_CAL", "P_REBOUND_10D") || [];
@@ -231,16 +228,13 @@ layout: null
         // PRICE
         {
         name: 'Price',
-        type: 'candlestick',
+        type: 'line',
         xAxisIndex: 0,
         yAxisIndex: 0,
-        data: candles,
-        itemStyle: {
-            color: '#22c55e',
-            color0: '#ef4444',
-            borderColor: '#22c55e',
-            borderColor0: '#ef4444'
-        }
+        data: closes,
+        showSymbol: false,
+        smooth: true,
+        lineStyle: { width: 2 }
         },
 
         // REGIMES (stacked)
