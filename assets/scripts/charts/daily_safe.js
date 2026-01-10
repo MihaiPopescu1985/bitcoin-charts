@@ -116,31 +116,6 @@ layout: null
         const oc_whale_share = ocAligned('ONCHAIN_WHALE_SHARE');
         const oc_dom_z = ocAligned('ONCHAIN_DOM_Z');
 
-        // Disabled
-        // Simple moving average that ignores nulls; returns null until window is full
-        // function sma(arr, win) {
-        //   const out = new Array(arr.length).fill(null);
-        //   let sum = 0, cnt = 0;
-        //   const q = [];
-        //   for (let i = 0; i < arr.length; i++) {
-        //     const v = arr[i];
-        //     q.push(v);
-        //     if (v != null && isFinite(v)) { sum += v; cnt++; }
-        //     if (q.length > win) {
-        //       const old = q.shift();
-        //       if (old != null && isFinite(old)) { sum -= old; cnt--; }
-        //     }
-        //     out[i] = (q.length === win && cnt > 0) ? (sum / cnt) : null;
-        //   }
-        //   return out;
-        // }
-
-        // // Smooth to reduce daily noise (tweak windows if needed)
-        // const oc_amount_log = sma(oc_amount_log_raw, 7);
-        // const oc_vol_z = sma(oc_vol_z_raw, 14);
-        // const oc_whale_share = sma(oc_whale_share_raw, 7);
-        // const oc_dom_z = sma(oc_dom_z_raw, 14);
-
         return {
     backgroundColor: '#ffffff',
     animation: false,
