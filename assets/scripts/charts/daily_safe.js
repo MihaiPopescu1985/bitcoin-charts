@@ -32,17 +32,14 @@ layout: null
         return null;
     }
 
-    function pickRegimeSeries(s, mode) {
-        const suf = (mode === 'hmm') ? '_HMM' : '';
-        const get = (k) => seriesOrFallback(s, k + suf, k); // if hmm missing, fallback to heur
+    function pickRegimeSeries(s) {
+        const get = (k, fallbackKey = null) => seriesOrFallback(s, k, fallbackKey);
 
         return [
-            ["UP_SLOW", get("P_UP_SLOW")],
-            ["UP_FAST", get("P_UP_FAST")],
-            ["RANGE_LOWVOL", get("P_RANGE_LOWVOL")],
-            ["RANGE_HIGHVOL", get("P_RANGE_HIGHVOL")],
-            ["DOWN_SLOW", get("P_DOWN_SLOW")],
-            ["DOWN_FAST", get("P_DOWN_FAST")],
+            ["R0", get("HMM_STATE_0", "P_R0_HMM")],
+            ["R1", get("HMM_STATE_1", "P_R1_HMM")],
+            ["R2", get("HMM_STATE_2", "P_R2_HMM")],
+            ["R3", get("HMM_STATE_3", "P_R3_HMM")],
         ];
     }
 
@@ -62,7 +59,6 @@ layout: null
     }
 
     function buildOption(rawData) {
-        const regimeMode = 'hmm';
         const featuresPayload = rawData && rawData.features ? rawData.features : null;
         const onchainPayload = rawData && rawData.onchain ? rawData.onchain : null;
         const dailyPrice = rawData && rawData.dailyPrice ? rawData.dailyPrice : null;
@@ -80,7 +76,7 @@ layout: null
         const featuresSeries = featuresPayload.series;
         const onChainSeries = (onchainPayload && onchainPayload.series) ? onchainPayload.series : {};
 
-        const regimes = pickRegimeSeries(featuresSeries, regimeMode);
+        const regimes = pickRegimeSeries(featuresSeries);
 
         const closes = buildCloseSeries(dates, dailyPrice);
 
@@ -142,12 +138,10 @@ layout: null
         // Pornim cu un set "citibil" by default. Restul rămân în legendă, dar OFF.
         selected: {
         'Price': true,
-        'UP_SLOW': true,
-        'UP_FAST': true,
-        'RANGE_LOWVOL': true,
-        'RANGE_HIGHVOL': true,
-        'DOWN_SLOW': true,
-        'DOWN_FAST': true,
+        'R0': true,
+        'R1': true,
+        'R2': true,
+        'R3': true,
         'P_Corr_10D': true,
         'P_Reb_10D': true,
         'E_target_safe': true,
