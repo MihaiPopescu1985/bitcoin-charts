@@ -71,12 +71,20 @@ layout: null
         }
 
         const dates = featuresPayload.dates;
+        const dateIndex = new Map(dates.map((d, i) => [d, i]));
 
         // const n = dates.length;
         const featuresSeries = featuresPayload.series;
         const onChainSeries = (onchainPayload && onchainPayload.series) ? onchainPayload.series : {};
 
         const regimes = pickRegimeSeries(featuresSeries);
+        const hmmLabelFallback = ["R0", "R1", "R2", "R3"];
+        const hmmStateLabels = (featuresPayload.meta && featuresPayload.meta.hmm
+            && Array.isArray(featuresPayload.meta.hmm.labels_by_state)
+            && featuresPayload.meta.hmm.labels_by_state.length === 4)
+            ? featuresPayload.meta.hmm.labels_by_state
+            : hmmLabelFallback;
+        const hmmStateKeys = ["HMM_STATE_0", "HMM_STATE_1", "HMM_STATE_2", "HMM_STATE_3"];
 
         const closes = buildCloseSeries(dates, dailyPrice);
 
@@ -123,7 +131,54 @@ layout: null
         axisPointer: { type: 'cross' },
         backgroundColor: '#ffffff',
         borderColor: 'rgba(0,0,0,0.15)',
-        textStyle: { color: '#1f2933' }
+        textStyle: { color: '#1f2933' },
+        formatter: (params) => {
+            if (!params || !params.length) return '';
+            const date = params[0].axisValue;
+            const idx = dateIndex.get(date);
+            const domArr = featuresSeries["HMM_DOM"];
+            const confArr = featuresSeries["HMM_CONF"];
+            let dom = null;
+            let conf = null;
+            if (idx != null && domArr && domArr[idx] != null) {
+                const v = +domArr[idx];
+                dom = isFinite(v) ? Math.round(v) : null;
+            }
+            if (idx != null && confArr && confArr[idx] != null) {
+                const v = +confArr[idx];
+                conf = isFinite(v) ? v : null;
+            }
+            if (dom == null || conf == null) {
+                const probs = hmmStateKeys.map((k) => {
+                    const arr = featuresSeries[k];
+                    if (!arr || idx == null || arr[idx] == null) return 0;
+                    const v = +arr[idx];
+                    return isFinite(v) ? v : 0;
+                });
+                conf = Math.max(...probs);
+                dom = probs.indexOf(conf);
+            }
+            const domLabel = (dom != null && isFinite(dom))
+                ? (hmmStateLabels[dom] || `R${dom}`)
+                : 'UNKNOWN';
+
+            const lines = [];
+            lines.push(`<div style="font-weight:700; margin-bottom:4px;">${date}</div>`);
+            lines.push(`<div>Regime: <span style="font-weight:700;">${domLabel}</span></div>`);
+            lines.push(`<div>State id: ${(dom != null && isFinite(dom)) ? dom : '-'}</div>`);
+            lines.push(`<div>HMM_CONF: ${(conf != null && isFinite(conf)) ? conf.toFixed(3) : '-'}</div>`);
+            lines.push('<div style="margin:6px 0; height:1px; background:rgba(0,0,0,0.08);"></div>');
+
+            const skipSeries = new Set(['R0', 'R1', 'R2', 'R3']);
+            params.forEach((p) => {
+                if (!p || p.data == null || skipSeries.has(p.seriesName)) return;
+                const v = (typeof p.data === 'number' && isFinite(p.data)) ? p.data : null;
+                const val = v == null ? '-' : v.toFixed(4);
+                lines.push(`<div><span style="display:inline-block; margin-right:6px; width:8px; height:8px; border-radius:50%; background:${p.color};"></span>${p.seriesName}: ${val}</div>`);
+            });
+
+            return lines.join('');
+        }
     },
     axisPointer: { link: [{ xAxisIndex: 'all' }] },
     legend: {
