@@ -8,117 +8,129 @@ title: BTC Pulse
     <div>
       <span>SAFE</span>
       <span>Statistical Asset Flow Engine</span>
-      <span>— probabilistic regime + hazard + exposure + on-chain</span>
+      <span> - probabilistic regimes + hazard + exposure</span>
     </div>
-    <h1>SAFE: a probabilistic dashboard for BTC decisions</h1>
+    <h1>SAFE: a context engine for BTC risk decisions</h1>
     <p>
-      SAFE is a framework that replaces classic indicators with <b>probabilities</b>.
-      It aims to answer one question: <b>“How much risk should I take today?”</b>
-      using three layers: <b>Regime</b> (market state), <b>Hazard</b> (risk of adverse move),
-      and <b>Exposure</b> (target position sizing), optionally augmented with <b>on-chain signals</b>.
+      SAFE is not a price predictor and not a signal generator. It summarizes the current
+      market context as probabilities and converts that context into a target exposure level.
+      The core question is: <b>"How much risk makes sense right now?"</b>
     </p>
 
     <section>
       <div>
-        <h2>What SAFE is (in one paragraph)</h2>
+        <h2>SAFE in one paragraph</h2>
         <p>
-          SAFE models price as a <b>living process</b>. Instead of “RSI says oversold”, it produces
-          <b>state probabilities</b> such as <span>DOWN_SLOW</span> or <span>RANGE_LOWVOL</span>,
-          plus <b>short-horizon statistical measures</b> (e.g., autocorrelation and rebound likelihood) and
-          <b>on-chain flow metrics</b>. The output is a consistent, machine-readable set of numbers that can drive
-          a strategy, a rules engine, or a training label set for ML.
+          SAFE treats BTC as a living system whose behavior changes over time. It estimates
+          probabilistic regimes, combines them with risk features (volatility, trend stress, hazard),
+          and produces a continuous target exposure between <b>0 and 1</b>. The dashboard is built
+          for understanding and risk control, not for impulsive trading.
         </p>
 
         <div></div>
 
-        <h2>Core design principles</h2>
+        <h2>A simple analogy</h2>
+        <p>
+          Think of price as the road and SAFE as the weather plus road conditions. It does not tell you
+          the exact destination, but it tells you whether conditions are safe enough to drive fast
+          or whether you should slow down.
+        </p>
+
+        <div></div>
+
+        <h2>What SAFE does and does not do</h2>
         <div>
           <div>
-            <strong>1) Probabilities, not “signals”</strong>
+            <strong>What it does</strong>
             <p>
-              Each component is calibrated to output values in interpretable scales (e.g., 0..1),
-              so multiple sources can be combined without hand-wavy normalization.
+              Describes market context, reduces risk in dangerous periods, and stays transparent
+              through auditable indicators.
             </p>
           </div>
           <div>
-            <strong>2) Separation of concerns</strong>
+            <strong>What it does not do</strong>
             <p>
-              <b>Regime</b> answers “what market are we in?”.
-              <b>Exposure</b> answers “how attractive is risk-adjusted participation?”.
-              On-chain adds “who is moving?”.
+              It does not promise to beat buy and hold, it does not call tops or bottoms, and it does
+              not generate buy or sell signals.
             </p>
           </div>
         </div>
 
         <div></div>
 
+        <h2>How to read SAFE outputs</h2>
+        <p>
+          The operational output is a <b>target exposure</b> (0..1) and a simple action label
+          (<b>NO ACTION</b>, <b>INCREASE</b>, <b>DECREASE</b>). Adjustments are gradual, and the current
+          bias is <b>long-only</b> with risk throttling.
+        </p>
       </div>
 
       <div>
-        <h2>Glossary (quick)</h2>
-        <div>
-          <div><b>Regime</b>: market state probabilities</div>
-          <div><b>Hazard</b>: risk-of-adverse-move score</div>
-          <div><b>Exposure</b>: target position sizing (0..1)</div>
-          <div><b>On-chain</b>: network flows + dominance/whales</div>
-        </div>
-
-        <div></div>
-
-        <h2>Typical SAFE states</h2>
+        <h2>Regimes shown in the dashboard</h2>
         <table>
           <thead>
             <tr>
-              <th>State</th>
+              <th>Regime</th>
               <th>Meaning</th>
-              <th>Typical action</th>
+              <th>Typical context</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>UP_FAST</td>
-              <td>Strong trend + high velocity</td>
-              <td>Allow high exposure</td>
+              <td>CORE</td>
+              <td>Stable, normal market behavior</td>
+              <td>Lower noise, steady conditions</td>
             </tr>
             <tr>
-              <td>UP_SLOW</td>
-              <td>Trend up, controlled pace</td>
-              <td>Moderate/high exposure</td>
+              <td>DRIFT</td>
+              <td>Stable but gently directional</td>
+              <td>Soft trend without strong conviction</td>
             </tr>
             <tr>
-              <td>RANGE_LOWVOL</td>
-              <td>Compression, volatility decay</td>
-              <td>Wait for confirmation / mean-reversion rules</td>
+              <td>SURGE</td>
+              <td>Strong move with high volatility</td>
+              <td>Fast repricing, momentum-driven</td>
             </tr>
             <tr>
-              <td>RANGE_HIGHVOL</td>
-              <td>Choppy swings, elevated noise</td>
-              <td>Reduce exposure, avoid overtrading</td>
-            </tr>
-            <tr>
-              <td>DOWN_SLOW</td>
-              <td>Orderly decline, not panic</td>
-              <td>Defensive; watch for transition</td>
-            </tr>
-            <tr>
-              <td>DOWN_FAST</td>
-              <td>Capitulation / panic dynamics</td>
-              <td>Minimal exposure, wait for stabilization</td>
+              <td>SHOCK</td>
+              <td>Stress regime, elevated volatility</td>
+              <td>Risk-off conditions, drawdown risk</td>
             </tr>
           </tbody>
         </table>
 
         <p>
-          Note: exact actions depend on your ruleset (e.g., long-only, leverage mode, risk budget).
+          Markets often contain <b>multiple regimes at once</b>. SAFE shows them as probabilities,
+          not hard switches.
         </p>
+
+        <div></div>
+
+        <h2>High-level pipeline</h2>
+        <div>
+          <div><b>1) Features</b>: returns, volatility, trend, stress</div>
+          <div><b>2) Regimes</b>: probabilistic state estimates (HMM)</div>
+          <div><b>3) Hazard</b>: event risk of adverse moves</div>
+          <div><b>4) Exposure</b>: capital-aware target allocation</div>
+        </div>
+
+        <div></div>
+
+        <h2>Design principles</h2>
+        <div>
+          <div><b>Calibrated probabilities</b> over pretty scores</div>
+          <div><b>Regime awareness</b> over single indicators</div>
+          <div><b>Auditability</b> over black-box ML</div>
+        </div>
       </div>
     </section>
 
     <h2>Disclaimer</h2>
     <p>
-      SAFE is a research/engineering framework and does not constitute financial advice.
-      Any strategy built on top of SAFE should include robust risk controls, slippage/fee modeling,
-      and out-of-sample validation.
+      SAFE is a research and engineering framework. It is not financial advice.
+      Any strategy built on top of SAFE should include robust risk controls and
+      out-of-sample validation.
     </p>
 
   </section>
